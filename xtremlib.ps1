@@ -16,7 +16,7 @@ Written by : Brandon Kvarda
 #>
 
 
-### GET/INFORMATION COMMANDS ###
+######### GET/INFORMATIONAL COMMANDS ##########
 
 #Returns XtremIO Cluster Name
 Function Get-XtremClusterName ([string]$xioname,[string]$username,[string]$password)
@@ -50,8 +50,30 @@ Function Get-XtremClusterStatus ([string]$xioname,[string]$username,[string]$pas
 
 }
 
+#Returns Volume Information
+Function Get-XtremClusterVolumes([string]$xioname,[string]$username,[string]$password)
+{
 
-### ACTION COMMANDS ###
+
+}
+
+#Returns Snapshot Information
+Function Get-XtremClusterSnapshots([string]$xioname,[string]$username,[string]$password)
+{
+
+
+
+}
+
+#Returns Initiator Information
+Function Get-XtremClusterInitiators([string]$xioname,[string]$username,[string]$password)
+{
+
+
+}
+
+
+######### ACTION COMMANDS #########
 
 #Creates a Volume
 Function Create-XtremVolume([string]$xioname,[string]$username,[string]$password,[string]$volname,[string]$volsize)
@@ -78,8 +100,48 @@ Function Remove-XtremVolume([string]$xioname,[string]$username,[string]$password
 
 }
 
+#Creates a Snapshot of a Volume
+Function Create-XtremSnap([string]$xioname,[string]$username,[string]$password,[string]$volname,[string]$snapname)
+{
+ $header = Get-XtremAuthHeader -username $username -password $password
+ $body = @"
+ {
+   "ancestor-vol-id":"$volname",
+   "snap-vol-name":"$snapname"
+ }
+"@
+ 
+ $uri = "https://"+$xioname+"/api/json/types/snapshots/"
+ Invoke-RestMethod -Uri $uri -Headers $header -Method Post -Body $body
+}
 
-### REQUEST HELPERS ###
+#Deletes an XtremIO Snapshot
+Function Remove-XtremSnap([string]$xioname,[string]$username,[string]$password,[string]$snapname)
+{
+ $header = Get-XtremAuthHeader -username $username -password $password
+ $uri = "https://"+$xioname+"/api/json/types/snapshots/?name="+$snapname
+ Invoke-RestMethod -Uri $uri -Headers $header -Method Delete
+}
+
+
+#Maps volume to initiator group
+Function Map-XtremVolume([string]$xioname,[string]$username,[string]$password,[string]$volname,[string]$initgroup)
+{
+ $header = Get-XtremAuthHeader -username $username -password $password
+ $body = @"
+ {
+   "vol-name":"$volname",
+   "ig-id":"$initgroup"
+ }
+"@
+ $uri = "https://"+$xioname+"/api/json/types/lun-maps/"
+ Invoke-RestMethod -Uri $uri -Headers $header -Method Post -Body $body
+
+}
+
+
+
+######### REQUEST HELPERS #########
 
 
 #Generates Header to be used in requests to XtremIO
