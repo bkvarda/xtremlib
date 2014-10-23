@@ -7,6 +7,7 @@ This is currently incomplete, I intend to include most API functionality as well
  -Implement token-based security
  -Implement all basic storage creation/setting commands
  -Implement snapshot commands
+ -Implement error handling logic
 
 Written by : Brandon Kvarda
              @bjkvarda
@@ -24,6 +25,19 @@ Function Get-XtremClusterName ([string]$xioname,[string]$username,[string]$passw
   (Invoke-RestMethod -Uri https://$xioname/api/json/types/clusters -Headers $header -Method Get).clusters
 
 }
+
+#Returns information about StorageController
+Function Get-XtremStorageControllers ([string]$xioname,[string]$controllername,[string]$username,[string]$password)
+{
+
+  $header = Get-XtremAuthHeader -username $username -password $password
+  $uri = "https://"+$xioname+"/api/json/types/storage-controllers/?name="+$controllername
+
+  (Invoke-RestMethod -Uri $uri -Headers $header -Method Get).content
+
+
+}
+ 
 
 #Returns Various XtremIO Statistics
 Function Get-XtremClusterStatus ([string]$xioname,[string]$username,[string]$password)
