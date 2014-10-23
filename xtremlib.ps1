@@ -88,7 +88,7 @@ Function Create-XtremVolume([string]$xioname,[string]$username,[string]$password
 "@
   
   $uri = "https://"+$xioname+"/api/json/types/volumes/"
-  Invoke-RestMethod -Uri $uri -Headers $header -Method Post -Body $body
+  Invoke-RestMethod -Uri $uri -Headers $header -Method Post -Body $body 
 }
 
 #Deletes a Volume
@@ -96,8 +96,25 @@ Function Remove-XtremVolume([string]$xioname,[string]$username,[string]$password
 {
  $header = Get-XtremAuthHeader -username $username -password $password
  $uri = "https://"+$xioname+"/api/json/types/volumes/?name="+$volname
- Invoke-RestMethod -Uri $uri -Headers $header -Method Delete
+  
+  $result = try{
+    Invoke-RestMethod -Uri $uri -Headers $header -Method Delete
+    Write-Host ""
+    Write-Host -ForegroundColor Green  "Volume or Snapshot ""$volname"" was successfully deleted"
+  }
+  catch{
+    $result = $_.Exception.Response.GetResponseStream()
+    $reader = New-Object System.IO.StreamReader($result)
+    $responseBody = $reader.ReadToEnd(); 
+    $errormsg = $responseBody | ConvertFrom-Json
 
+    if($errormsg.message = "vol_obj_not_found")
+    {
+     Write-Host ""
+     Write-Host -ForegroundColor Red "The volume name $volname does not exist"
+    }
+        
+  }
 }
 
 #Creates a Snapshot of a Volume
@@ -154,6 +171,15 @@ Function Get-XtremAuthHeader([string]$username,[string]$password)
   $headers = @{Authorization=("Basic {0}" -f $basicAuth)}
 
   return $headers
+
+}
+
+######### ETC #########
+
+Function Get-XtremCommands()
+{
+
+
 
 }
 
