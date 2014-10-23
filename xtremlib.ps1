@@ -16,6 +16,8 @@ Written by : Brandon Kvarda
 #>
 
 
+### GET/INFORMATION COMMANDS ###
+
 #Returns XtremIO Cluster Name
 Function Get-XtremClusterName ([string]$xioname,[string]$username,[string]$password)
 {
@@ -35,7 +37,6 @@ Function Get-XtremStorageControllers ([string]$xioname,[string]$controllername,[
 
   (Invoke-RestMethod -Uri $uri -Headers $header -Method Get).content
 
-
 }
  
 
@@ -48,6 +49,37 @@ Function Get-XtremClusterStatus ([string]$xioname,[string]$username,[string]$pas
   (Invoke-RestMethod -Uri $uri -Headers $header -Method Get).content                                   
 
 }
+
+
+### ACTION COMMANDS ###
+
+#Creates a Volume
+Function Create-XtremVolume([string]$xioname,[string]$username,[string]$password,[string]$volname,[string]$volsize)
+{
+  $header = Get-XtremAuthHeader -username $username -password $password
+  
+  $body = @"
+  {
+     "vol-name":"$volname",
+      "vol-size":"$volsize"
+  }
+"@
+  
+  $uri = "https://"+$xioname+"/api/json/types/volumes/"
+  Invoke-RestMethod -Uri $uri -Headers $header -Method Post -Body $body
+}
+
+#Deletes a Volume
+Function Remove-XtremVolume([string]$xioname,[string]$username,[string]$password,[string]$volname)
+{
+ $header = Get-XtremAuthHeader -username $username -password $password
+ $uri = "https://"+$xioname+"/api/json/types/volumes/?name="+$volname
+ Invoke-RestMethod -Uri $uri -Headers $header -Method Delete
+
+}
+
+
+### REQUEST HELPERS ###
 
 
 #Generates Header to be used in requests to XtremIO
