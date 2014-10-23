@@ -130,7 +130,7 @@ Function Map-XtremVolume([string]$xioname,[string]$username,[string]$password,[s
  $header = Get-XtremAuthHeader -username $username -password $password
  $body = @"
  {
-   "vol-name":"$volname",
+   "vol-id":"$volname",
    "ig-id":"$initgroup"
  }
 "@
