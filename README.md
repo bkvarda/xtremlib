@@ -16,8 +16,33 @@ a module directory, run 'Import-Module xtremlib.ps1' in PowerShell.
 Instructions will be provided once manifest is created
  
 ## Usage
+See module manifest (once complete). Use the xtremlib cmdlets to get information from and make changes to XtremIO. Current list of 
+commands below (all of these work if syntax is all correct, some still need error handling logic and console text/style):
+**Get-XtremClusterName ([string]$xioip,[string]$username,[string]$password)**
+
+**Create-XtremVolume([string]$xioname,[string]$username,[string]$password,[string]$volname,[string]$volsize)**
+
+**Get-XtremStorageControllers ([string]$xioname,[string]$controllername,[string]$username,[string]$password)**
+
+**Get-XtremClusterStatus ([string]$xioname,[string]$username,[string]$password)**
+
+**Get-XtremClusterVolumes([string]$xioname,[string]$username,[string]$password)**
+
+**Get-XtremClusterSnapshots([string]$xioname,[string]$username,[string]$password)**
+
+**Get-XtremClusterInitiators([string]$xioname,[string]$username,[string]$password)**
+
+**Remove-XtremVolume([string]$xioname,[string]$username,[string]$password,[string]$volname)**
+
+**Create-XtremSnap([string]$xioname,[string]$username,[string]$password,[string]$volname,[string]$snapname)**
+
+**Remove-XtremSnap([string]$xioname,[string]$username,[string]$password,[string]$snapname)**
+
+**Map-XtremVolume([string]$xioname,[string]$username,[string]$password,[string]$volname,[string]$initgroup)**
+
+
  
-TODO: Usage to come...
+TODO: More to come...
  
  
 ## History
