@@ -19,13 +19,14 @@ Written by : Brandon Kvarda
 ######### GET/INFORMATIONAL COMMANDS ##########
 
 #Returns XtremIO Cluster Name
-Function Get-XtremClusterName ([string]$xioname,[string]$username,[string]$password)
+Function Get-XtremClusterName ([string]$xioip,[string]$username,[string]$password)
 {
   $header = Get-XtremAuthHeader -username $username -password $password
   $format = @{Expression={$._clusters};Label="System Name"}
 
-  (Invoke-RestMethod -Uri https://$xioname/api/json/types/clusters -Headers $header -Method Get).clusters
-
+  $clustername = (Invoke-RestMethod -Uri https://$xioip/api/json/types/clusters -Headers $header -Method Get).clusters.name
+  Write-Host ""
+  Write-Host -ForegroundColor Green "XtremIO Cluster Name: $clustername"
 }
 
 #Returns information about StorageController
