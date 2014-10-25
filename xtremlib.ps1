@@ -33,7 +33,8 @@ Function Get-XtremClusterName ([string]$xioip,[string]$username,[string]$passwor
  
 #Returns Various XtremIO Statistics
 Function Get-XtremClusterStatus ([string]$xioname,[string]$username,[string]$password)
-{$result=
+{
+ $result=
   try{
     $header = Get-XtremAuthHeader -username $username -password $password 
     $uri = "https://"+$xioname+"/api/json/types/clusters/?name="+$xioname
@@ -59,47 +60,90 @@ Function Get-XtremClusterStatus ([string]$xioname,[string]$username,[string]$pas
 
 }
 
-#Returns Volume Information
-Function Get-XtremClusterVolumes([string]$xioname,[string]$username,[string]$password)
-{
+#Returns List of Volumes
+Function Get-XtremVolumes([string]$xioname,[string]$username,[string]$password){
+  $result=
+  try{  
+    $header = Get-XtremAuthHeader -username $username -password $password 
+    $uri = "https://"+$xioname+"/api/json/types/volumes"
+    $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get)
+
+    return $data.volumes | Select-Object @{Name="Volume Name";Expression={$_.name}} 
+   }
+   catch{
+    Get-XtremErrorMsg -errordata $result
+   }
+
+}
+
+#Returns Statistics for a Specific Volume
+Function Get-XtremVolumeInfo([string]$xioname,[string]$username,[string]$password){
+    
+    
+    
 
 
 }
 
-#Returns Snapshot Information
-Function Get-XtremClusterSnapshots([string]$xioname,[string]$username,[string]$password)
+#Returns List of Snapshots
+Function Get-XtremSnapshots([string]$xioname,[string]$username,[string]$password)
+{
+ $result=
+  try{  
+    $header = Get-XtremAuthHeader -username $username -password $password 
+    $uri = "https://"+$xioname+"/api/json/types/snapshots/"
+    $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get)
+    
+    return $data.snapshots | Select-Object @{Name="Snapshot Name";Expression={$_.name}} 
+   }
+   catch{
+    Get-XtremErrorMsg -errordata $result
+   }
+
+}
+
+#Returns Statistics for a Specific Snapshot
+Function Get-XtremSnapshotInfo([string]$xioname,[string]$username,[string]$password)
 {
 
 
 
 }
 
-#Returns Initiator Information
-Function Get-XtremClusterInitiators([string]$xioname,[string]$username,[string]$password)
-{
 
+#Returns List of Initiators
+Function Get-XtremClusterInitiators([string]$xioname,[string]$username,[string]$password){
+ $result=
+  try{  
+    $header = Get-XtremAuthHeader -username $username -password $password 
+    $uri = "https://"+$xioname+"/api/json/types/initiator-groups"
+    $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get)
 
+    return $data.'initiator-groups' | Select-Object @{Name="Initiator Group/Hostname";Expression={$_.name}} 
+   }
+   catch{
+    Get-XtremErrorMsg -errordata $result
+   }
 }
 
 
 ######### ACTION COMMANDS #########
 
 #Creates a Volume
-Function Create-XtremVolume([string]$xioname,[string]$username,[string]$password,[string]$volname,[string]$volsize)
-{
-$result=
- try{
-  $header = Get-XtremAuthHeader -username $username -password $password 
-  $body = @"
-  {
-     "vol-name":"$volname",
-      "vol-size":"$volsize"
-  }
+Function Create-XtremVolume([string]$xioname,[string]$username,[string]$password,[string]$volname,[string]$volsize){
+ $result=
+  try{
+   $header = Get-XtremAuthHeader -username $username -password $password 
+   $body = @"
+   {
+      "vol-name":"$volname",
+       "vol-size":"$volsize"
+   }
 "@
-  $uri = "https://"+$xioname+"/api/json/types/volumes/"
-  Invoke-RestMethod -Uri $uri -Headers $header -Method Post -Body $body
-  Write-Host ""
-  Write-Host -ForegroundColor Green "Successfully create volume ""$volname"" with $volsize of capacity" 
+   $uri = "https://"+$xioname+"/api/json/types/volumes/"
+   Invoke-RestMethod -Uri $uri -Headers $header -Method Post -Body $body
+   Write-Host ""
+   Write-Host -ForegroundColor Green "Successfully create volume ""$volname"" with $volsize of capacity" 
   }
   catch{
    Get-XtremErrorMsg($result)
@@ -108,9 +152,8 @@ $result=
 }
 
 #Deletes a Volume
-Function Remove-XtremVolume([string]$xioname,[string]$username,[string]$password,[string]$volname)
-{
-$result = try{
+Function Remove-XtremVolume([string]$xioname,[string]$username,[string]$password,[string]$volname){
+ $result = try{
   $header = Get-XtremAuthHeader -username $username -password $password
   $uri = "https://"+$xioname+"/api/json/types/volumes/?name="+$volname
   Invoke-RestMethod -Uri $uri -Headers $header -Method Delete
@@ -126,7 +169,7 @@ $result = try{
 #Creates a Snapshot of a Volume
 Function Create-XtremSnap([string]$xioname,[string]$username,[string]$password,[string]$volname,[string]$snapname){
 $result =
-try{
+ try{
  $header = Get-XtremAuthHeader -username $username -password $password
  $body = @"
   {
@@ -145,8 +188,7 @@ try{
 
 
 #Deletes an XtremIO Snapshot
-Function Remove-XtremSnap([string]$xioname,[string]$username,[string]$password,[string]$snapname)
-{
+Function Remove-XtremSnap([string]$xioname,[string]$username,[string]$password,[string]$snapname){
  $result = try{
       $header = Get-XtremAuthHeader -username $username -password $password
       $uri = "https://"+$xioname+"/api/json/types/snapshots/?name="+$snapname
@@ -159,8 +201,7 @@ Function Remove-XtremSnap([string]$xioname,[string]$username,[string]$password,[
 
 
 #Maps volume to initiator group
-Function Map-XtremVolume([string]$xioname,[string]$username,[string]$password,[string]$volname,[string]$initgroup)
-{
+Function Map-XtremVolume([string]$xioname,[string]$username,[string]$password,[string]$volname,[string]$initgroup){
 $result=try{
     $header = Get-XtremAuthHeader -username $username -password $password
     $body = @"
@@ -186,8 +227,7 @@ $result=try{
 
 
 #Generates Header to be used in requests to XtremIO
-Function Get-XtremAuthHeader([string]$username,[string]$password)
-{
+Function Get-XtremAuthHeader([string]$username,[string]$password){
  
   $basicAuth = ("{0}:{1}" -f $username,$password)
   $basicAuth = [System.Text.Encoding]::UTF8.GetBytes($basicAuth)
@@ -202,8 +242,7 @@ Function Get-XtremAuthHeader([string]$username,[string]$password)
 
 ######### ETC #########
 
-Function Get-XtremErrorMsg([AllowNull()][object]$errordata)
-{   
+Function Get-XtremErrorMsg([AllowNull()][object]$errordata){   
     $ed = $errordata
    
   try{ 
@@ -224,8 +263,7 @@ Function Get-XtremErrorMsg([AllowNull()][object]$errordata)
   
 }
 
-Function Get-XtremCommands()
-{
+Function Get-XtremCommands(){
 
 
 
