@@ -14,8 +14,9 @@ Written by : Brandon Kvarda
 #>
 
 ######### GLOBAL VARIABLES #########
-
-
+$global:XtremUsername =$null
+$global:XtremPassword =$null
+$global:XtremName =$null
 
 ######### SYSTEM COMMANDS ##########
 
@@ -23,6 +24,14 @@ Written by : Brandon Kvarda
 #Returns Various XtremIO Statistics
 Function Get-XtremClusterStatus ([string]$xioname,[string]$username,[string]$password)
 {
+
+  if($global:XtremUsername){
+  $username = $global:XtremUsername
+  $xioname = $global:XtremName
+  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
+  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+  }
+
  $result=
   try{
     $header = Get-XtremAuthHeader -username $username -password $password
@@ -60,10 +69,16 @@ Function Get-XtremEvents([string]$xioname,[string]$username,[string]$password){
 
 #Returns List of Volumes
 Function Get-XtremVolumes([string]$xioname,[string]$username,[string]$password){
+  if($global:XtremUsername){
+  $username = $global:XtremUsername
+  $xioname = $global:XtremName
+  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
+  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+  }
+  
   $result=
   try{  
     $header = Get-XtremAuthHeader -username $username -password $password
-    $formattedname = Get-XtremClusterName -xioname $xioname -header $header
     $uri = "https://$xioname/api/json/types/volumes"
     $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get)
 
@@ -77,11 +92,18 @@ Function Get-XtremVolumes([string]$xioname,[string]$username,[string]$password){
 
 #Returns Statistics for a Specific Volume or Snapshot
 Function Get-XtremVolumeInfo([string]$xioname,[string]$username,[string]$password,[string]$volname){
+   
+   if($global:XtremUsername){
+  $username = $global:XtremUsername
+  $xioname = $global:XtremName
+  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
+  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+  }
+   
     
   $result=
   try{  
     $header = Get-XtremAuthHeader -username $username -password $password 
-    $formattedname = Get-XtremClusterName -xioname $xioname -header $header
     $uri = "https://$xioname/api/json/types/volumes/?name=$volname"
     $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get).content
     $hosts = @()
@@ -114,10 +136,17 @@ Function Get-XtremVolumeInfo([string]$xioname,[string]$username,[string]$passwor
 
 #Creates a Volume
 Function New-XtremVolume([string]$xioname,[string]$username,[string]$password,[string]$volname,[string]$volsize){
+ 
+ if($global:XtremUsername){
+  $username = $global:XtremUsername
+  $xioname = $global:XtremName
+  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
+  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+  }
+ 
  $result=
   try{
    $header = Get-XtremAuthHeader -username $username -password $password 
-   $formattedname = Get-XtremClusterName -xioname $xioname -header $header
    $body = @"
    {
       "vol-name":"$volname",
@@ -137,10 +166,17 @@ Function New-XtremVolume([string]$xioname,[string]$username,[string]$password,[s
 
 #Modify a Volume 
 Function Edit-XtremVolume([string]$xioname,[string]$username,[string]$password,[string]$volname,[string]$volsize){
+  
+  if($global:XtremUsername){
+  $username = $global:XtremUsername
+  $xioname = $global:XtremName
+  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
+  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+  }
+  
   $result=
   try{
    $header = Get-XtremAuthHeader -username $username -password $password 
-   $formattedname = Get-XtremClusterName -xioname $xioname -header $header
    $body = @"
    {
       "vol-name":"$volname",
@@ -161,9 +197,16 @@ Function Edit-XtremVolume([string]$xioname,[string]$username,[string]$password,[
 
 #Deletes a Volume
 Function Remove-XtremVolume([string]$xioname,[string]$username,[string]$password,[string]$volname){
+ 
+ if($global:XtremUsername){
+  $username = $global:XtremUsername
+  $xioname = $global:XtremName
+  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
+  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+  }
+ 
  $result = try{
   $header = Get-XtremAuthHeader -username $username -password $password
-  $formattedname = Get-XtremClusterName -xioname $xioname -header $header
   $uri = "https://$xioname/api/json/types/volumes/?name="+$volname
   Invoke-RestMethod -Uri $uri -Headers $header -Method Delete
   Write-Host ""
@@ -178,10 +221,17 @@ Function Remove-XtremVolume([string]$xioname,[string]$username,[string]$password
 #Returns List of Snapshots
 Function Get-XtremSnapshots([string]$xioname,[string]$username,[string]$password){
  
+ if($global:XtremUsername){
+  $username = $global:XtremUsername
+  $xioname = $global:XtremName
+  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
+  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+  }
+
+
  $result=
   try{  
     $header = Get-XtremAuthHeader -username $username -password $password 
-    $formattedname = Get-XtremClusterName -xioname $xioname -header $header
     $uri = "https://$xioname/api/json/types/snapshots/"
     $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get)
     
@@ -195,10 +245,17 @@ Function Get-XtremSnapshots([string]$xioname,[string]$username,[string]$password
 
 #Creates a Snapshot of a Volume
 Function New-XtremSnap([string]$xioname,[string]$username,[string]$password,[string]$volname,[string]$snapname){
+
+if($global:XtremUsername){
+  $username = $global:XtremUsername
+  $xioname = $global:XtremName
+  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
+  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+  }
+
 $result =
  try{
  $header = Get-XtremAuthHeader -username $username -password $password
- $formattedname = Get-XtremClusterName -xioname $xioname -header $header
  $body = @"
   {
     "ancestor-vol-id":"$volname",
@@ -228,9 +285,16 @@ Function New-XtremSnapSet([string]$xioname,[string]$username,[string]$password,[
 
 #Deletes an XtremIO Snapshot
 Function Remove-XtremSnap([string]$xioname,[string]$username,[string]$password,[string]$snapname){
+ 
+ if($global:XtremUsername){
+  $username = $global:XtremUsername
+  $xioname = $global:XtremName
+  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
+  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+  }
+ 
  $result = try{
       $header = Get-XtremAuthHeader -username $username -password $password
-      $formattedname = Get-XtremClusterName -xioname $xioname -header $header
       $uri = "https://$xioname/api/json/types/snapshots/?name=$snapname"
       Invoke-RestMethod -Uri $uri -Headers $header -Method Delete
       Write-Host ""
@@ -276,11 +340,18 @@ Function Remove-XtremVolumeFolder([string]$xioname,[string]$username,[string]$pa
 
 #Returns List of Initiators
 Function Get-XtremClusterInitiators([string]$xioname,[string]$username,[string]$password){
+   
+   if($global:XtremUsername){
+  $username = $global:XtremUsername
+  $xioname = $global:XtremName
+  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
+  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+  }
+
 
    $result=
   try{  
     $header = Get-XtremAuthHeader -username $username -password $password 
-    $formattedname = Get-XtremClusterName -xioname $xioname -header $header
     $uri = "https://$xioname/api/json/types/initiators/"
     $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get).initiators
     
@@ -295,10 +366,17 @@ Function Get-XtremClusterInitiators([string]$xioname,[string]$username,[string]$
 
 #Returns info for a specific XtremIO Initiator
 Function Get-XtremInitiatorInfo([string]$xioname,[string]$username,[string]$password,[string]$initiatorname){
+ 
+ if($global:XtremUsername){
+  $username = $global:XtremUsername
+  $xioname = $global:XtremName
+  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
+  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+  }
+ 
  $result=
   try{  
     $header = Get-XtremAuthHeader -username $username -password $password 
-    $formattedname = Get-XtremClusterName -xioname $xioname -header $header
     $uri = "https://$xioname/api/json/types/initiators/?name=$initiatorname"
     $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get).content
     
@@ -319,10 +397,16 @@ Function Get-XtremInitiatorInfo([string]$xioname,[string]$username,[string]$pass
 #Creates initiator and adds to initiator group
 Function New-XtremInitiator([string]$xioname,[string]$username,[string]$password,[string]$initiatorname,[string]$address,[string]$igname){
   
+  if($global:XtremUsername){
+  $username = $global:XtremUsername
+  $xioname = $global:XtremName
+  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
+  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+  }
+
   $result=
   try{  
     $header = Get-XtremAuthHeader -username $username -password $password 
-    $formattedname = Get-XtremClusterName -xioname $xioname -header $header
     $uri = "https://$xioname/api/json/types/initiators/"
     $body = @"
    {
@@ -356,11 +440,18 @@ Function Remove-XtremInitiator([string]$xioname,[string]$username,[string]$passw
 
 #Returns list of XtremIO Initiator Groups
 Function Get-XtremInitiatorGroups([string]$xioname,[string]$username,[string]$password){
+   
+   if($global:XtremUsername){
+  $username = $global:XtremUsername
+  $xioname = $global:XtremName
+  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
+  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+  }
+   
     
-     $result=
+  $result=
   try{  
     $header = Get-XtremAuthHeader -username $username -password $password 
-    $formattedname = Get-XtremClusterName -xioname $xioname -header $header
     $uri = "https://$xioname/api/json/types/initiator-groups"
     $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get)
 
@@ -406,9 +497,17 @@ Function Get-XtremVolumeMappings([string]$xioname,[string]$username,[string]$pas
 
 #Maps volume to initiator group
 Function New-XtremVolumeMapping([string]$xioname,[string]$username,[string]$password,[string]$volname,[string]$initgroup){
-$result=try{
+  
+  if($global:XtremUsername){
+  $username = $global:XtremUsername
+  $xioname = $global:XtremName
+  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
+  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+  }
+
+
+  $result=try{
     $header = Get-XtremAuthHeader -username $username -password $password
-    $formattedname = Get-XtremClusterName -xioname $xioname -header $header
     $body = @"
     {
     "vol-id":"$volname",
@@ -449,9 +548,17 @@ Function Get-XtremAuthHeader([string]$username,[string]$password){
 
 #Returns XtremIO Cluster Name
 Function Get-XtremClusterName ([string]$xioname,[object]$header){
+
+  if($global:XtremUsername){
+  $username = $global:XtremUsername
+  $xioname = $global:XtremName
+  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
+  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+  }
   
   $clustername = (Invoke-RestMethod -Uri https://$xioname/api/json/types/clusters -Headers $header -Method Get).clusters.name
   return $clustername 
+ 
 }
 
 
@@ -479,17 +586,58 @@ Function Get-XtremErrorMsg([AllowNull()][object]$errordata){
   
 }
 
-Function New-XtremSessionName($xioname){
+#Defines global username, password, and hostname/ip for PS session 
+function New-XtremSession {
+    $global:XtremName = Read-Host -Prompt "Enter XtremIO XMS Hostname or IP Address"
+    $global:XtremUsername = Read-Host -Prompt "Enter XtremIO username"
+    $global:XtremPassword = Read-Host -Prompt "Enter password" -AsSecureString    
+}
+
+
+#Edits the Global XtremeName (IP/Hostname) variable
+function Edit-XtremName([string] $xioname)
+{
+  if($xioname)
+  {
+   $global:XtremName = $xioname
+   return
+
+  }
+  else{
+   
+   $global:XtremName = Read-Host -Prompt "Enter New XtremIO XMS Hostname or IP Address"
+
+  }
 
 }
 
-Function New-XtremSessionCredential([string]$username,[string]$password){
+#Edits the Global XtremeUserName variable
+function Edit-XtremName([string] $username)
+{
+  if($username)
+  {
+   $global:XtremUsername = $username
+   return
+
+  }
+  else{
+   
+   $global:XtremUsername = Read-Host -Prompt "Enter New XtremIO Username"
+
+  }
 
 }
 
-Function Get-XtremCommands(){
+#Edits the Global password variable
+function Edit-XtremPassword()
+{
+ 
+   $global:XtremPassword = Read-Host -Prompt "Enter New XtremIO Password" -AsSecureString
 
-
+  
 
 }
+
+
+
 
