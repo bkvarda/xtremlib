@@ -233,6 +233,9 @@ Function Remove-XtremSnap([string]$xioname,[string]$username,[string]$password,[
       $formattedname = Get-XtremClusterName -xioname $xioname -header $header
       $uri = "https://$formattedname/api/json/types/snapshots/?name=$snapname"
       Invoke-RestMethod -Uri $uri -Headers $header -Method Delete
+      Write-Host ""
+      Write-Host -ForegroundColor Green "Successfully deleted snapshot ""$snapname"""
+      Write-Host ""
      }
      catch{
       Get-XtremErrorMsg -errordata $result
