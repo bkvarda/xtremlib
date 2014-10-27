@@ -4,6 +4,7 @@
  
 xtremlib is a PowerShell Module that acts as a wrapper for interactions with the XtremIO RESTful API
 This is currently incomplete, I intend to include most API functionality as well as make content more presentable.
+This release is for XIOS 2.4. 
 
 
  
@@ -24,6 +25,8 @@ See module manifest for full list of functions. Use the xtremlib functions to ge
 Better documentation will be created, but for now open the *.psm1 file to see the purpose of each function and the required 
 switches/input. One-time credential setting will soon be possible, but right now credentials must be specified with every command. 
 Here are some examples:
+
+![Alt text](http://i.imgur.com/cMSVfho.png "Example with stored credentials")
 
 ![Alt text](http://i.imgur.com/jl2JGpS.png "Example Commands")
 
