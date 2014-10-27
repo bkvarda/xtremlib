@@ -27,7 +27,7 @@ Function Get-XtremClusterStatus ([string]$xioname,[string]$username,[string]$pas
   try{
     $header = Get-XtremAuthHeader -username $username -password $password
     $formattedname = Get-XtremClusterName -xioname $xioname -header $header
-    $uri = "https://$formattedname/api/json/types/clusters/?name=$formattedname"
+    $uri = "https://$xioname/api/json/types/clusters/?name=$formattedname"
     $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get).content
 
     $format =`
@@ -64,7 +64,7 @@ Function Get-XtremVolumes([string]$xioname,[string]$username,[string]$password){
   try{  
     $header = Get-XtremAuthHeader -username $username -password $password
     $formattedname = Get-XtremClusterName -xioname $xioname -header $header
-    $uri = "https://$formattedname/api/json/types/volumes"
+    $uri = "https://$xioname/api/json/types/volumes"
     $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get)
 
     return $data.volumes | Select-Object @{Name="Volume Name";Expression={$_.name}} 
@@ -82,7 +82,7 @@ Function Get-XtremVolumeInfo([string]$xioname,[string]$username,[string]$passwor
   try{  
     $header = Get-XtremAuthHeader -username $username -password $password 
     $formattedname = Get-XtremClusterName -xioname $xioname -header $header
-    $uri = "https://$formattedname/api/json/types/volumes/?name=$volname"
+    $uri = "https://$xioname/api/json/types/volumes/?name=$volname"
     $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get).content
     $hosts = @()
     
@@ -124,7 +124,7 @@ Function New-XtremVolume([string]$xioname,[string]$username,[string]$password,[s
       "vol-size":"$volsize"
    }
 "@
-   $uri = "https://$formattedname/api/json/types/volumes/"
+   $uri = "https://$xioname/api/json/types/volumes/"
    Invoke-RestMethod -Uri $uri -Headers $header -Method Post -Body $body
    Write-Host ""
    Write-Host -ForegroundColor Green "Successfully create volume ""$volname"" with $volsize of capacity" 
@@ -147,7 +147,7 @@ Function Edit-XtremVolume([string]$xioname,[string]$username,[string]$password,[
       "vol-size":"$volsize"
    }
 "@
-   $uri = "https://$formattedname/api/json/types/volumes/?name=$volname"
+   $uri = "https://$xioname/api/json/types/volumes/?name=$volname"
    Invoke-RestMethod -Uri $uri -Headers $header -Method Put -Body $body
    Write-Host ""
    Write-Host -ForegroundColor Green "Successfully modified volume ""$volname"" to have $volsize of capacity" 
@@ -164,7 +164,7 @@ Function Remove-XtremVolume([string]$xioname,[string]$username,[string]$password
  $result = try{
   $header = Get-XtremAuthHeader -username $username -password $password
   $formattedname = Get-XtremClusterName -xioname $xioname -header $header
-  $uri = "https://$formattedname/api/json/types/volumes/?name="+$volname
+  $uri = "https://$xioname/api/json/types/volumes/?name="+$volname
   Invoke-RestMethod -Uri $uri -Headers $header -Method Delete
   Write-Host ""
   Write-Host -ForegroundColor Green  "Volume ""$volname"" was successfully deleted"
@@ -182,7 +182,7 @@ Function Get-XtremSnapshots([string]$xioname,[string]$username,[string]$password
   try{  
     $header = Get-XtremAuthHeader -username $username -password $password 
     $formattedname = Get-XtremClusterName -xioname $xioname -header $header
-    $uri = "https://$formattedname/api/json/types/snapshots/"
+    $uri = "https://$xioname/api/json/types/snapshots/"
     $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get)
     
     return $data.snapshots | Select-Object @{Name="Snapshot Name";Expression={$_.name}} 
@@ -205,7 +205,7 @@ $result =
     "snap-vol-name":"$snapname"
   }
 "@
-  $uri = "https://$formattedname/api/json/types/snapshots/"
+  $uri = "https://$xioname/api/json/types/snapshots/"
   Invoke-RestMethod -Uri $uri -Headers $header -Method Post -Body $body
   Write-Host ""
   Write-Host -ForegroundColor Green "Snapshot of volume ""$volname"" with name ""$snapname"" successfully created"
@@ -231,7 +231,7 @@ Function Remove-XtremSnap([string]$xioname,[string]$username,[string]$password,[
  $result = try{
       $header = Get-XtremAuthHeader -username $username -password $password
       $formattedname = Get-XtremClusterName -xioname $xioname -header $header
-      $uri = "https://$formattedname/api/json/types/snapshots/?name=$snapname"
+      $uri = "https://$xioname/api/json/types/snapshots/?name=$snapname"
       Invoke-RestMethod -Uri $uri -Headers $header -Method Delete
       Write-Host ""
       Write-Host -ForegroundColor Green "Successfully deleted snapshot ""$snapname"""
@@ -276,14 +276,17 @@ Function Remove-XtremVolumeFolder([string]$xioname,[string]$username,[string]$pa
 
 #Returns List of Initiators
 Function Get-XtremClusterInitiators([string]$xioname,[string]$username,[string]$password){
- $result=
+
+   $result=
   try{  
     $header = Get-XtremAuthHeader -username $username -password $password 
     $formattedname = Get-XtremClusterName -xioname $xioname -header $header
-    $uri = "https://$formattedname/api/json/types/initiator-groups"
-    $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get)
+    $uri = "https://$xioname/api/json/types/initiators/"
+    $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get).initiators
+    
 
-    return $data.'initiator-groups' | Select-Object @{Name="Initiator Group/Hostname";Expression={$_.name}} 
+
+    return $data | Select-Object @{Name="Initiator Name";Expression={$_.name}} 
    }
    catch{
     Get-XtremErrorMsg -errordata $result
@@ -292,12 +295,51 @@ Function Get-XtremClusterInitiators([string]$xioname,[string]$username,[string]$
 
 #Returns info for a specific XtremIO Initiator
 Function Get-XtremInitiatorInfo([string]$xioname,[string]$username,[string]$password,[string]$initiatorname){
+ $result=
+  try{  
+    $header = Get-XtremAuthHeader -username $username -password $password 
+    $formattedname = Get-XtremClusterName -xioname $xioname -header $header
+    $uri = "https://$xioname/api/json/types/initiators/?name=$initiatorname"
+    $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get).content
+    
+    $format =`
+    @{Expression={$data.name};Label="Initiator Name";width=15;alignment="Center"},
+    @{Expression={$data.'port-address'};Label="Address";width=24;alignment="Center"}, `
+    @{Expression={$data.'ig-id'[1]};Label="Initiator Group";width=24;alignment="Center"},
+    @{Expression={$data.index};Label="Index";width=10;alignment="Center"}
 
+
+    return $data |Format-Table $format
+   }
+   catch{
+    Get-XtremErrorMsg -errordata $result
+   }
 }
 
 #Creates initiator and adds to initiator group
 Function New-XtremInitiator([string]$xioname,[string]$username,[string]$password,[string]$initiatorname,[string]$address,[string]$igname){
+  
+  $result=
+  try{  
+    $header = Get-XtremAuthHeader -username $username -password $password 
+    $formattedname = Get-XtremClusterName -xioname $xioname -header $header
+    $uri = "https://$xioname/api/json/types/initiators/"
+    $body = @"
+   {
+      "initiator-name":"$initiatorname",
+      "port-address":"$address",
+      "ig-id":"$igname"
+   }
+"@
 
+   $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method POST -Body $body)
+   Write-Host ""
+   Write-Host -ForegroundColor Green "Successfully created initiator ""$initiatorname"" with address ""$address"" in initiator group ""$igname"""
+   Write-Host ""
+   }
+   catch{
+    Get-XtremErrorMsg -errordata $result
+   }
 }
 
 #Modifies initiator
@@ -314,6 +356,19 @@ Function Remove-XtremInitiator([string]$xioname,[string]$username,[string]$passw
 
 #Returns list of XtremIO Initiator Groups
 Function Get-XtremInitiatorGroups([string]$xioname,[string]$username,[string]$password){
+    
+     $result=
+  try{  
+    $header = Get-XtremAuthHeader -username $username -password $password 
+    $formattedname = Get-XtremClusterName -xioname $xioname -header $header
+    $uri = "https://$xioname/api/json/types/initiator-groups"
+    $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get)
+
+    return $data.'initiator-groups' | Select-Object @{Name="Initiator Group/Hostname";Expression={$_.name}} 
+   }
+   catch{
+    Get-XtremErrorMsg -errordata $result
+   }
 
 }
 
@@ -360,7 +415,7 @@ $result=try{
     "ig-id":"$initgroup"
     }
 "@
-    $uri = "https://$formattedname/api/json/types/lun-maps/"
+    $uri = "https://$xioname/api/json/types/lun-maps/"
     Invoke-RestMethod -Uri $uri -Headers $header -Method Post -Body $body
     Write-Host ""
     Write-Host -ForegroundColor Green "Volume ""$volname"" successfully mapped to initiator group ""$initgroup"""
@@ -422,6 +477,14 @@ Function Get-XtremErrorMsg([AllowNull()][object]$errordata){
 
    } 
   
+}
+
+Function New-XtremSessionName($xioname){
+
+}
+
+Function New-XtremSessionCredential([string]$username,[string]$password){
+
 }
 
 Function Get-XtremCommands(){
