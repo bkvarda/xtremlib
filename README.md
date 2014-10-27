@@ -23,7 +23,7 @@ in PowerShell.
 ## Usage
 See module manifest for full list of functions. Use the xtremlib functions to get information from and make changes to XtremIO.
 Better documentation will be created, but for now open the *.psm1 file to see the purpose of each function and the required 
-switches/input. One-time credential setting will soon be possible, but right now credentials must be specified with every command. 
+switches/input. One-time credential setting is now possible (first screenshot). Can also specify credentials every command.  
 Here are some examples:
 
 ![Alt text](http://i.imgur.com/cMSVfho.png "Example with stored credentials")
