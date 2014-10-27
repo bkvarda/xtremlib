@@ -3,7 +3,8 @@
 # xtremlib
  
 xtremlib is a PowerShell Module that acts as a wrapper for interactions with the XtremIO RESTful API
-This is currently incomplete, I intend to include most API functionality as well as make content more presentable
+This is currently incomplete, I intend to include most API functionality as well as make content more presentable.
+
  
 ## Installation
 
@@ -20,7 +21,11 @@ in PowerShell.
 ## Usage
 See module manifest for full list of functions. Use the xtremlib functions to get information from and make changes to XtremIO.
 Better documentation will be created, but for now open the *.psm1 file to see the purpose of each function and the required 
-switches/input. 
+switches/input.  Here are some examples:
+
+![Alt text](http://i.imgur.com/jl2JGpS.png "Example Commands")
+
+![Alt text](http://i.imgur.com/bckO9Wz.png "More examples")
 
 ## History
  
