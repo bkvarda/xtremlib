@@ -8,47 +8,25 @@ This is currently incomplete, I intend to include most API functionality as well
 ## Installation
 
 #### Importing the Module 
-Download xtremlib.ps1 and copy to a PowerShell module directory. If you do not know where your PowerShell module directories are, 
-open up a PowerShell prompt and examine the PSModulePath variable by entering '$env:PSModulePath'. Once the file has been placed in 
-a module directory, run 'Import-Module xtremlib.ps1' in PowerShell.
+Download entire  contents as .zip. Extract the xtremlib folder to your computer. Open a PowerShell session
+and run 'Import-Module <location where you put xtremlib>. xtremlib will now be available for your current session 
 
 #### Installing the Module
-Instructions will be provided once manifest is created
+Download entire contents as .zip Extract the xtremlib folder to a designated PowerShell module directory. If you do
+not know where your PowerShell module directories are, open up a PowerShell prompt and examine the PSModulePath variable
+by entering '$env:PSModulePath'. Once the folder has been placed in a module directory, module functions will be available
+in PowerShell. 
  
 ## Usage
-See module manifest (once complete). Use the xtremlib cmdlets to get information from and make changes to XtremIO. Current list of 
-commands below (all of these work if syntax is all correct, some still need error handling logic and console text/style):
+See module manifest for full list of functions. Use the xtremlib functions to get information from and make changes to XtremIO.
+Better documentation will be created, but for now open the *.psm1 file to see the purpose of each function and the required 
+switches/input. 
 
-*Get-XtremClusterName ([string]$xioip,[string]$username,[string]$password)*
-
-*Create-XtremVolume([string]$xioname,[string]$username,[string]$password,[string]$volname,[string]$volsize)*
-
-*Get-XtremStorageControllers ([string]$xioname,[string]$controllername,[string]$username,[string]$password)*
-
-*Get-XtremClusterStatus ([string]$xioname,[string]$username,[string]$password)*
-
-*Get-XtremClusterVolumes([string]$xioname,[string]$username,[string]$password)*
-
-*Get-XtremClusterSnapshots([string]$xioname,[string]$username,[string]$password)*
-
-*Get-XtremClusterInitiators([string]$xioname,[string]$username,[string]$password)*
-
-*Remove-XtremVolume([string]$xioname,[string]$username,[string]$password,[string]$volname)*
-
-*Create-XtremSnap([string]$xioname,[string]$username,[string]$password,[string]$volname,[string]$snapname)*
-
-*Remove-XtremSnap([string]$xioname,[string]$username,[string]$password,[string]$snapname)*
-
-*Map-XtremVolume([string]$xioname,[string]$username,[string]$password,[string]$volname,[string]$initgroup)*
-
-
- 
-TODO: More to come...
- 
- 
 ## History
  
-Started today!
+Began - 10/22
+Error handling logic added - 10/25
+Most core functions are complete - 10/26 
  
 
 ></content>

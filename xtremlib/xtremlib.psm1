@@ -207,6 +207,8 @@ $result =
 "@
   $uri = "https://$formattedname/api/json/types/snapshots/"
   Invoke-RestMethod -Uri $uri -Headers $header -Method Post -Body $body
+  Write-Host ""
+  Write-Host -ForegroundColor Green "Snapshot of volume ""$volname"" with name ""$snapname"" successfully created"
   }
   catch{
     Get-XtremErrorMsg -errordata $result
