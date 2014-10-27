@@ -17,7 +17,7 @@ Written by : Brandon Kvarda
 
 
 
-######### GET/INFORMATIONAL COMMANDS ##########
+######### SYSTEM COMMANDS ##########
 
 
 #Returns Various XtremIO Statistics
@@ -49,6 +49,14 @@ Function Get-XtremClusterStatus ([string]$xioname,[string]$username,[string]$pas
    }          
 
 }
+
+#Returns list of recent system events
+Function Get-XtremEvents([string]$xioname,[string]$username,[string]$password){
+
+}
+
+
+######### VOLUME AND SNAPSHOT COMMANDS #########
 
 #Returns List of Volumes
 Function Get-XtremVolumes([string]$xioname,[string]$username,[string]$password){
@@ -102,8 +110,69 @@ Function Get-XtremVolumeInfo([string]$xioname,[string]$username,[string]$passwor
     Get-XtremErrorMsg -errordata $result
    }  
     
+}
+
+#Creates a Volume
+Function New-XtremVolume([string]$xioname,[string]$username,[string]$password,[string]$volname,[string]$volsize){
+ $result=
+  try{
+   $header = Get-XtremAuthHeader -username $username -password $password 
+   $formattedname = Get-XtremClusterName -xioname $xioname -header $header
+   $body = @"
+   {
+      "vol-name":"$volname",
+      "vol-size":"$volsize"
+   }
+"@
+   $uri = "https://$formattedname/api/json/types/volumes/"
+   Invoke-RestMethod -Uri $uri -Headers $header -Method Post -Body $body
+   Write-Host ""
+   Write-Host -ForegroundColor Green "Successfully create volume ""$volname"" with $volsize of capacity" 
+  }
+  catch{
+   Get-XtremErrorMsg($result)
+  }
+
+}
+
+#Modify a Volume 
+Function Edit-XtremVolume([string]$xioname,[string]$username,[string]$password,[string]$volname,[string]$volsize){
+  $result=
+  try{
+   $header = Get-XtremAuthHeader -username $username -password $password 
+   $formattedname = Get-XtremClusterName -xioname $xioname -header $header
+   $body = @"
+   {
+      "vol-name":"$volname",
+      "vol-size":"$volsize"
+   }
+"@
+   $uri = "https://$formattedname/api/json/types/volumes/?name=$volname"
+   Invoke-RestMethod -Uri $uri -Headers $header -Method Put -Body $body
+   Write-Host ""
+   Write-Host -ForegroundColor Green "Successfully modified volume ""$volname"" to have $volsize of capacity" 
+  }
+  catch{
+   Get-XtremErrorMsg($result)
+  }
 
 
+}
+
+#Deletes a Volume
+Function Remove-XtremVolume([string]$xioname,[string]$username,[string]$password,[string]$volname){
+ $result = try{
+  $header = Get-XtremAuthHeader -username $username -password $password
+  $formattedname = Get-XtremClusterName -xioname $xioname -header $header
+  $uri = "https://$formattedname/api/json/types/volumes/?name="+$volname
+  Invoke-RestMethod -Uri $uri -Headers $header -Method Delete
+  Write-Host ""
+  Write-Host -ForegroundColor Green  "Volume ""$volname"" was successfully deleted"
+  }
+  catch{
+   Get-XtremErrorMsg -errordata  $result    
+  }
+ 
 }
 
 #Returns List of Snapshots
@@ -124,68 +193,8 @@ Function Get-XtremSnapshots([string]$xioname,[string]$username,[string]$password
 
 }
 
-
-
-#Returns List of Initiators
-Function Get-XtremClusterInitiators([string]$xioname,[string]$username,[string]$password){
- $result=
-  try{  
-    $header = Get-XtremAuthHeader -username $username -password $password 
-    $formattedname = Get-XtremClusterName -xioname $xioname -header $header
-    $uri = "https://$formattedname/api/json/types/initiator-groups"
-    $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get)
-
-    return $data.'initiator-groups' | Select-Object @{Name="Initiator Group/Hostname";Expression={$_.name}} 
-   }
-   catch{
-    Get-XtremErrorMsg -errordata $result
-   }
-}
-
-
-######### ACTION COMMANDS #########
-
-#Creates a Volume
-Function Create-XtremVolume([string]$xioname,[string]$username,[string]$password,[string]$volname,[string]$volsize){
- $result=
-  try{
-   $header = Get-XtremAuthHeader -username $username -password $password 
-   $formattedname = Get-XtremClusterName -xioname $xioname -header $header
-   $body = @"
-   {
-      "vol-name":"$volname",
-       "vol-size":"$volsize"
-   }
-"@
-   $uri = "https://$formattedname/api/json/types/volumes/"
-   Invoke-RestMethod -Uri $uri -Headers $header -Method Post -Body $body
-   Write-Host ""
-   Write-Host -ForegroundColor Green "Successfully create volume ""$volname"" with $volsize of capacity" 
-  }
-  catch{
-   Get-XtremErrorMsg($result)
-  }
-
-}
-
-#Deletes a Volume
-Function Remove-XtremVolume([string]$xioname,[string]$username,[string]$password,[string]$volname){
- $result = try{
-  $header = Get-XtremAuthHeader -username $username -password $password
-  $formattedname = Get-XtremClusterName -xioname $xioname -header $header
-  $uri = "https://$formattedname/api/json/types/volumes/?name="+$volname
-  Invoke-RestMethod -Uri $uri -Headers $header -Method Delete
-  Write-Host ""
-  Write-Host -ForegroundColor Green  "Volume ""$volname"" was successfully deleted"
-  }
-  catch{
-   Get-XtremErrorMsg -errordata  $result    
-  }
- 
-}
-
 #Creates a Snapshot of a Volume
-Function Create-XtremSnap([string]$xioname,[string]$username,[string]$password,[string]$volname,[string]$snapname){
+Function New-XtremSnap([string]$xioname,[string]$username,[string]$password,[string]$volname,[string]$snapname){
 $result =
  try{
  $header = Get-XtremAuthHeader -username $username -password $password
@@ -204,6 +213,15 @@ $result =
   }
 }
 
+#Create Snapshots from a Folder
+Function New-XtremSnapFolder([string]$xioname,[string]$username,[string]$password,[string]$foldername,[string]$snapfoldername){
+
+}
+
+#Create Snapshots of a set of Volumes
+Function New-XtremSnapSet([string]$xioname,[string]$username,[string]$password,[string]$vollist,[string]$snaplist){
+
+}
 
 
 #Deletes an XtremIO Snapshot
@@ -220,8 +238,114 @@ Function Remove-XtremSnap([string]$xioname,[string]$username,[string]$password,[
 }
 
 
+
+
+######### VOLUME FOLDER COMMANDS#########
+
+#Returns list of XtremIO Volume Folders
+Function Get-XtremVolumeFolders([string]$xioname,[string]$username,[string]$password){
+
+}
+
+#Returns details of an XtremIO Volume Folder
+Function Get-XtremVolumeFolderInfo([string]$xioname,[string]$username,[string]$password,[string]$foldername){
+
+}
+
+#Create a new Volume Folder
+Function New-XtremVolumeFolder([string]$xioname,[string]$username,[string]$password,[string]$foldername){
+
+}
+
+#Rename a Volume Folder
+Function Edit-XtremVolumeFolder([string]$xioname,[string]$username,[string]$password,[string]$foldername,[string]$changeto){
+
+}
+
+#Delete a Volume Folder
+Function Remove-XtremVolumeFolder([string]$xioname,[string]$username,[string]$password,[string]$foldername){
+
+}
+
+######### INITIATOR COMMANDS #########
+
+#Returns List of Initiators
+Function Get-XtremClusterInitiators([string]$xioname,[string]$username,[string]$password){
+ $result=
+  try{  
+    $header = Get-XtremAuthHeader -username $username -password $password 
+    $formattedname = Get-XtremClusterName -xioname $xioname -header $header
+    $uri = "https://$formattedname/api/json/types/initiator-groups"
+    $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get)
+
+    return $data.'initiator-groups' | Select-Object @{Name="Initiator Group/Hostname";Expression={$_.name}} 
+   }
+   catch{
+    Get-XtremErrorMsg -errordata $result
+   }
+}
+
+#Returns info for a specific XtremIO Initiator
+Function Get-XtremInitiatorInfo([string]$xioname,[string]$username,[string]$password,[string]$initiatorname){
+
+}
+
+#Creates initiator and adds to initiator group
+Function New-XtremInitiator([string]$xioname,[string]$username,[string]$password,[string]$initiatorname,[string]$address,[string]$igname){
+
+}
+
+#Modifies initiator
+Function Edit-XtremInitiator([string]$xioname,[string]$username,[string]$password,[string]$initiatorname,[string]$address,[string]$igname){
+
+}
+
+#Deletes initiator
+Function Remove-XtremInitiator([string]$xioname,[string]$username,[string]$password,[string]$initiatorname){
+
+}
+
+######### INITIATOR GROUP COMMANDS #########
+
+#Returns list of XtremIO Initiator Groups
+Function Get-XtremInitiatorGroups([string]$xioname,[string]$username,[string]$password){
+
+}
+
+#Returns info for a specific XtremIO initiator group
+Function Get-XtremInitiatorGroupInfo([string]$xioname,[string]$username,[string]$password,[string]$igname){
+
+}
+
+#Creates initiator group
+Function New-XtremInitiatorGroup([string]$xioname,[string]$username,[string]$password,[string]$igname){
+
+}
+
+#Modifies initiator group
+Function Edit-XtremInitiatorGroup([string]$xioname,[string]$username,[string]$password,[string]$igname){
+
+}
+
+#Deletes initiator group
+Function Remove-XtremInitiatorGroup([string]$xioname,[string]$username,[string]$password,[string]$igname){
+
+}
+
+######### TARGET INFO COMMANDS #########
+
+
+
+
+######### VOLUME MAPPING COMMANDS #########
+
+#Returns list of volume mappings
+Function Get-XtremVolumeMappings([string]$xioname,[string]$username,[string]$password){
+
+}
+
 #Maps volume to initiator group
-Function Map-XtremVolume([string]$xioname,[string]$username,[string]$password,[string]$volname,[string]$initgroup){
+Function New-XtremVolumeMapping([string]$xioname,[string]$username,[string]$password,[string]$volname,[string]$initgroup){
 $result=try{
     $header = Get-XtremAuthHeader -username $username -password $password
     $formattedname = Get-XtremClusterName -xioname $xioname -header $header
@@ -242,6 +366,10 @@ $result=try{
 
 }
 
+#Removes volume mapping
+Function Remove-XtremVolumeMappings([string]$xioname,[string]$username,[string]$password,[string]$mapname){
+
+}
 
 
 ######### REQUEST HELPERS #########
@@ -285,10 +413,9 @@ Function Get-XtremErrorMsg([AllowNull()][object]$errordata){
     }
    catch{
     Write-Host ""
-    Write-Host -ForegroundColor Red "Error: Xtremio name not resolveable"
+    Write-Host -ForegroundColor Red "Error: XtremIO name not resolveable"
 
-   }
-    
+   } 
   
 }
 
