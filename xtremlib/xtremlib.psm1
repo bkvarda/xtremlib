@@ -244,7 +244,7 @@ Function Get-XtremSnapshots([string]$xioname,[string]$username,[string]$password
 }
 
 #Creates a Snapshot of a Volume
-Function New-XtremSnaphot([string]$xioname,[string]$username,[string]$password,[string]$volname,[string]$snapname){
+Function New-XtremSnapshot([string]$xioname,[string]$username,[string]$password,[string]$volname,[string]$snapname){
 
 if($global:XtremUsername){
   $username = $global:XtremUsername
@@ -284,7 +284,7 @@ Function New-XtremSnapSet([string]$xioname,[string]$username,[string]$password,[
 
 
 #Deletes an XtremIO Snapshot
-Function Remove-XtremSnap([string]$xioname,[string]$username,[string]$password,[string]$snapname){
+Function Remove-XtremSnapShot([string]$xioname,[string]$username,[string]$password,[string]$snapname){
  
  if($global:XtremUsername){
   $username = $global:XtremUsername
