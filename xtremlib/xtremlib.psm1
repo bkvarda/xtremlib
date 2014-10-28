@@ -244,7 +244,7 @@ Function Get-XtremSnapshots([string]$xioname,[string]$username,[string]$password
 }
 
 #Creates a Snapshot of a Volume
-Function New-XtremSnap([string]$xioname,[string]$username,[string]$password,[string]$volname,[string]$snapname){
+Function New-XtremSnaphot([string]$xioname,[string]$username,[string]$password,[string]$volname,[string]$snapname){
 
 if($global:XtremUsername){
   $username = $global:XtremUsername
@@ -510,8 +510,8 @@ Function Remove-XtremInitiatorGroup([string]$xioname,[string]$username,[string]$
 
 ######### VOLUME MAPPING COMMANDS #########
 
-#Returns list of volume mappings
-Function Get-XtremVolumeMappings([string]$xioname,[string]$username,[string]$password){
+#Returns list of volume mapping names (not IDs)
+Function Get-XtremVolumeMappingList([string]$xioname,[string]$username,[string]$password){
 
    if($global:XtremUsername){
   $username = $global:XtremUsername
@@ -536,7 +536,7 @@ Function Get-XtremVolumeMappings([string]$xioname,[string]$username,[string]$pas
 }
 
 #Returns Volumes mapped by Initiator group/hostname
-Function Get-XtremVolumeMapping([string]$xioname,[string]$username,[string]$password,[string]$igname){
+Function Get-XtremVolumeMappingInfo([string]$xioname,[string]$username,[string]$password,[string]$igname){
   
    if($global:XtremUsername){
   $username = $global:XtremUsername
@@ -573,7 +573,6 @@ Function Get-XtremVolumeMapping([string]$xioname,[string]$username,[string]$pass
    catch{
     Get-XtremErrorMsg -errordata $result
    }
-
 
 }
 
