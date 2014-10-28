@@ -466,6 +466,26 @@ Function Get-XtremInitiatorGroups([string]$xioname,[string]$username,[string]$pa
 #Returns info for a specific XtremIO initiator group
 Function Get-XtremInitiatorGroupInfo([string]$xioname,[string]$username,[string]$password,[string]$igname){
 
+     if($global:XtremUsername){
+  $username = $global:XtremUsername
+  $xioname = $global:XtremName
+  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
+  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+  }
+   
+    
+  $result=
+  try{  
+    $header = Get-XtremAuthHeader -username $username -password $password 
+    $uri = "https://$xioname/api/json/types/initiator-groups/?name=$igname"
+    $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get).content
+
+    return $data
+   }
+   catch{
+    Get-XtremErrorMsg -errordata $result
+   }
+
 }
 
 #Creates initiator group
@@ -515,6 +535,86 @@ Function Get-XtremVolumeMappings([string]$xioname,[string]$username,[string]$pas
 
 }
 
+#Returns Volumes mapped by Initiator group/hostname
+Function Get-XtremVolumeMapping([string]$xioname,[string]$username,[string]$password,[string]$igname){
+  
+   if($global:XtremUsername){
+  $username = $global:XtremUsername
+  $xioname = $global:XtremName
+  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
+  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+  }
+
+   $result=
+  try{  
+    $header = Get-XtremAuthHeader -username $username -password $password 
+    $mapuri = "https://$xioname/api/json/types/lun-maps"
+    $data = (Invoke-RestMethod -Uri $mapuri -Headers $header -Method Get)
+    $maplist = $data.'lun-maps'.name
+    $maparray =@()
+    Write-Host ""
+    Write-Host "Retrieving volume list for host ""$igname"". This request may take a while on arrays with a lot of volumes..."
+    Write-Host ""
+    $maplist | ForEach-Object -Process {
+    $tempdata = (Invoke-RestMethod -Uri "https://$xioname/api/json/types/lun-maps/?name=$_" -Headers $header -Method Get).content
+
+      if($tempdata.'ig-name' -eq $igname){
+        $mapobject = New-Object System.Object
+        $mapobject | Add-Member -type NoteProperty -name 'Map ID' -Value $tempdata.'mapping-index'
+        $mapobject | Add-Member -type NoteProperty -name 'Volume Name' -Value $tempdata.'vol-name'
+        $mapobject | Add-Member -type NoteProperty -name 'Host (IG)' -Value $tempdata.'ig-name'
+        $maparray += $mapobject
+
+       }
+    }
+   return $maparray |Format-Table -AutoSize
+
+    }
+   catch{
+    Get-XtremErrorMsg -errordata $result
+   }
+
+
+}
+
+#Returns Map ID for a given volume and host/ig name combination. Helpful for removing a mapping.
+Function Get-XtremVolumeMapID([string]$xioname,[string]$username,[string]$password,[string]$igname,[string]$volname){
+
+   if($global:XtremUsername){
+  $username = $global:XtremUsername
+  $xioname = $global:XtremName
+  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
+  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+  }
+
+   $result=
+  try{  
+    $header = Get-XtremAuthHeader -username $username -password $password 
+    $mapuri = "https://$xioname/api/json/types/lun-maps"
+    $data = (Invoke-RestMethod -Uri $mapuri -Headers $header -Method Get)
+    $maplist = $data.'lun-maps'.name
+    $mapid = $null
+    Write-Host ""
+    Write-Host "Retrieving volume mapping for volume ""$volname"" and host ""$igname"". This request may take a while on arrays with a lot of volumes..."
+    Write-Host ""
+    $maplist | ForEach-Object -Process {
+    $tempdata = (Invoke-RestMethod -Uri "https://$xioname/api/json/types/lun-maps/?name=$_" -Headers $header -Method Get).content
+
+      if($tempdata.'ig-name' -eq $igname -and $tempdata.'vol-name' -eq $volname){
+        
+        $mapid = $tempdata.'mapping-index'
+      
+       }
+    }
+   return $mapid
+
+    }
+   catch{
+    Get-XtremErrorMsg -errordata $result
+   }
+
+}
+
 #Maps volume to initiator group
 Function New-XtremVolumeMapping([string]$xioname,[string]$username,[string]$password,[string]$volname,[string]$initgroup){
   
@@ -546,7 +646,7 @@ Function New-XtremVolumeMapping([string]$xioname,[string]$username,[string]$pass
 }
 
 #Removes volume mapping
-Function Remove-XtremVolumeMappings([string]$xioname,[string]$username,[string]$password,[string]$mapname){
+Function Remove-XtremVolumeMapping([string]$xioname,[string]$username,[string]$password,[string]$igname,[string]$volname){
 
   if($global:XtremUsername){
   $username = $global:XtremUsername
@@ -557,13 +657,15 @@ Function Remove-XtremVolumeMappings([string]$xioname,[string]$username,[string]$
    
     
   $result=
-  try{  
+  try{
+    $mapname = (Get-XtremVolumeMapID -xioname $xioname -username $username -password $password -igname $igname -volname $volname) 
+    Write-Host $mapname
     $header = Get-XtremAuthHeader -username $username -password $password 
-    $uri = "https://$xioname/api/json/types/lun-maps/?=$mapname"
+    $uri = "https://$xioname/api/json/types/lun-maps/$mapname"
     $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method DELETE)
 
     Write-Host ""
-    Write-Host -ForegroundColor Green "Successfully deleted mapping ""$mapname"""
+    Write-Host -ForegroundColor Green "Successfully deleted mapping of volume ""$volname"" from host/ig ""$igname"""
     Write-Host ""
    }
    catch{
