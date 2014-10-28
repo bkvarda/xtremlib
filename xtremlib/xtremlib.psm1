@@ -493,6 +493,26 @@ Function Remove-XtremInitiatorGroup([string]$xioname,[string]$username,[string]$
 #Returns list of volume mappings
 Function Get-XtremVolumeMappings([string]$xioname,[string]$username,[string]$password){
 
+   if($global:XtremUsername){
+  $username = $global:XtremUsername
+  $xioname = $global:XtremName
+  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
+  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+  }
+   
+    
+  $result=
+  try{  
+    $header = Get-XtremAuthHeader -username $username -password $password 
+    $uri = "https://$xioname/api/json/types/lun-maps"
+    $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get)
+
+    return $data.'lun-maps' | Select-Object @{Name="Lun Map Name";Expression={$_.name}} 
+   }
+   catch{
+    Get-XtremErrorMsg -errordata $result
+   }
+
 }
 
 #Maps volume to initiator group
@@ -527,6 +547,28 @@ Function New-XtremVolumeMapping([string]$xioname,[string]$username,[string]$pass
 
 #Removes volume mapping
 Function Remove-XtremVolumeMappings([string]$xioname,[string]$username,[string]$password,[string]$mapname){
+
+  if($global:XtremUsername){
+  $username = $global:XtremUsername
+  $xioname = $global:XtremName
+  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
+  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+  }
+   
+    
+  $result=
+  try{  
+    $header = Get-XtremAuthHeader -username $username -password $password 
+    $uri = "https://$xioname/api/json/types/lun-maps/?=$mapname"
+    $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method DELETE)
+
+    Write-Host ""
+    Write-Host -ForegroundColor Green "Successfully deleted mapping ""$mapname"""
+    Write-Host ""
+   }
+   catch{
+    Get-XtremErrorMsg -errordata $result
+   }
 
 }
 
