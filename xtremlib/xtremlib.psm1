@@ -275,6 +275,7 @@ $result =
 #Create Snapshots from a Folder
 Function New-XtremSnapFolder([string]$xioname,[string]$username,[string]$password,[string]$foldername,[string]$snapfoldername){
 
+
 }
 
 #Create Snapshots of a set of Volumes
@@ -306,24 +307,111 @@ Function Remove-XtremSnapShot([string]$xioname,[string]$username,[string]$passwo
      }
 }
 
+######### VOLUME FOLDER COMMANDS #########
 
 
 
-######### VOLUME FOLDER COMMANDS#########
+
+######### INITIATOR GROUP FOLDER COMMANDS#########
 
 #Returns list of XtremIO Volume Folders
-Function Get-XtremVolumeFolders([string]$xioname,[string]$username,[string]$password){
+Function Get-XtremIGFolders([string]$xioname,[string]$username,[string]$password){
 
+        if($global:XtremUsername){
+  $username = $global:XtremUsername
+  $xioname = $global:XtremName
+  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
+  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+  }
+
+
+ $result=
+  try{  
+    $header = Get-XtremAuthHeader -username $username -password $password 
+    $uri = "https://$xioname/api/json/types/ig-folders/"
+    $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get).folders
+    
+    return $data | Select-Object @{Name="Folder Name";Expression={$_.name}} 
+    
+   }
+   catch{
+    Get-XtremErrorMsg -errordata $result
+   }
 }
 
-#Returns details of an XtremIO Volume Folder
-Function Get-XtremVolumeFolderInfo([string]$xioname,[string]$username,[string]$password,[string]$foldername){
+#Returns details of an XtremIO Volume Folder. Defaults to root if foldername not entered 
+Function Get-XtremIGFolderInfo([string]$xioname,[string]$username,[string]$password,[string]$foldername){
+    
+    if($global:XtremUsername){
+  $username = $global:XtremUsername
+  $xioname = $global:XtremName
+  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
+  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+  }
 
+
+ $result=
+  try{  
+    $header = Get-XtremAuthHeader -username $username -password $password 
+    $uri = "https://$xioname/api/json/types/ig-folders/?name=/$foldername"
+    $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get).content
+
+     $iglist = @()
+
+     for($i = 0; $i -lt $data.'direct-list'.count;$i++)
+     {
+       $iglist = $iglist + $data.'direct-list'[$i][1]
+       
+     }
+     
+     $format =
+    @{Expression={$data.'folder-id'[1]};Label="Folder Name";width=15;alignment="Center"},
+    @{Expression={$data.'parent-folder-id'[1]};Label="Parent Folder";width=15;alignment="Center"},
+    @{Expression={$iglist};Label="Initiator Groups";width=150}
+     
+    
+    return $data |Format-Table $format
+    
+   }
+   catch{
+    Get-XtremErrorMsg -errordata $result
+   }
 }
 
-#Create a new Volume Folder
-Function New-XtremVolumeFolder([string]$xioname,[string]$username,[string]$password,[string]$foldername){
+#Create a new IG Folder. If no parent folder is specified, defaults to root.
+Function New-XtremIGFolder([string]$xioname,[string]$username,[string]$password,[string]$foldername,[string]$parentfolderpath){
 
+   if($global:XtremUsername){
+  $username = $global:XtremUsername
+  $xioname = $global:XtremName
+  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
+  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+  }
+
+  
+  if(!$parentfolder)
+  {
+   $parentfolder = "/"
+  }
+
+
+$result =
+ try{
+ $header = Get-XtremAuthHeader -username $username -password $password
+ $body = @"
+  {
+    "parent-folder-id":"$parentfolder",
+    "caption":"$foldername"
+  }
+"@
+  $uri = "https://$xioname/api/json/types/ig-folders/"
+  Invoke-RestMethod -Uri $uri -Headers $header -Method Post -Body $body
+  Write-Host ""
+  Write-Host -ForegroundColor Green "Initiator Group folder ""$foldername"" successfully created"
+  }
+  catch{
+    Get-XtremErrorMsg -errordata $result
+}
 }
 
 #Rename a Volume Folder
@@ -480,7 +568,13 @@ Function Get-XtremInitiatorGroupInfo([string]$xioname,[string]$username,[string]
     $uri = "https://$xioname/api/json/types/initiator-groups/?name=$igname"
     $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get).content
 
-    return $data
+    $format =`
+    @{Expression={$data.name};Label="Initiator Group Name";width=25;alignment="Center"},
+    @{Expression={$data.'num-of-initiators'};Label="# of Initiators";width=15;alignment="Center"}, `
+    @{Expression={$data.'num-of-vols'};Label="# of Volumes";width=12;alignment="Center"},
+    @{Expression={$data.iops};Label="IOPS";width=8;alignment="Center"}
+
+    return $data |Format-Table $format
    }
    catch{
     Get-XtremErrorMsg -errordata $result
