@@ -159,13 +159,15 @@ Function New-XtremVolume([string]$xioname,[string]$username,[string]$password,[s
    }
 "@
    $uri = "https://$xioname/api/json/types/volumes/"
-   Invoke-RestMethod -Uri $uri -Headers $header -Method Post -Body $body
+   $request = Invoke-RestMethod -Uri $uri -Headers $header -Method Post -Body $body
    Write-Host ""
-   Write-Host -ForegroundColor Green "Successfully create volume ""$volname"" with $volsize of capacity" 
+   Write-Host -ForegroundColor Green "Successfully create volume ""$volname"" with $volsize of capacity"
+   return $true 
    
   }
   catch{
    Get-XtremErrorMsg($result)
+   return $false
   }
 
 }
@@ -190,12 +192,14 @@ Function Edit-XtremVolume([string]$xioname,[string]$username,[string]$password,[
    }
 "@
    $uri = "https://$xioname/api/json/types/volumes/?name=$volname"
-   Invoke-RestMethod -Uri $uri -Headers $header -Method Put -Body $body
+   $request = Invoke-RestMethod -Uri $uri -Headers $header -Method Put -Body $body
    Write-Host ""
    Write-Host -ForegroundColor Green "Successfully modified volume ""$volname"" to have $volsize of capacity" 
+   return $true
   }
   catch{
    Get-XtremErrorMsg($result)
+   return $false
   }
 
 
@@ -214,12 +218,14 @@ Function Remove-XtremVolume([string]$xioname,[string]$username,[string]$password
  $result = try{
   $header = Get-XtremAuthHeader -username $username -password $password
   $uri = "https://$xioname/api/json/types/volumes/?name="+$volname
-  Invoke-RestMethod -Uri $uri -Headers $header -Method Delete
+  $request = Invoke-RestMethod -Uri $uri -Headers $header -Method Delete
   Write-Host ""
   Write-Host -ForegroundColor Green  "Volume ""$volname"" was successfully deleted"
+  return $true
   }
   catch{
-   Get-XtremErrorMsg -errordata  $result    
+   Get-XtremErrorMsg -errordata  $result 
+   return $false   
   }
  
 }
@@ -274,12 +280,14 @@ $result =
   }
 "@
   $uri = "https://$xioname/api/json/types/snapshots/"
-  Invoke-RestMethod -Uri $uri -Headers $header -Method Post -Body $body
+  $request = Invoke-RestMethod -Uri $uri -Headers $header -Method Post -Body $body
   Write-Host ""
   Write-Host -ForegroundColor Green "Snapshot of volume ""$volname"" with name ""$snapname"" successfully created"
+  return $true
   }
   catch{
     Get-XtremErrorMsg -errordata $result
+    return $false
   }
 }
 
@@ -308,13 +316,15 @@ Function Remove-XtremSnapShot([string]$xioname,[string]$username,[string]$passwo
  $result = try{
       $header = Get-XtremAuthHeader -username $username -password $password
       $uri = "https://$xioname/api/json/types/snapshots/?name=$snapname"
-      Invoke-RestMethod -Uri $uri -Headers $header -Method Delete
+      $request = Invoke-RestMethod -Uri $uri -Headers $header -Method Delete
       Write-Host ""
       Write-Host -ForegroundColor Green "Successfully deleted snapshot ""$snapname"""
       Write-Host ""
+      return $true
      }
      catch{
       Get-XtremErrorMsg -errordata $result
+      return $false
      }
 }
 
@@ -417,12 +427,14 @@ $result =
   }
 "@
   $uri = "https://$xioname/api/json/types/ig-folders/"
-  Invoke-RestMethod -Uri $uri -Headers $header -Method Post -Body $body
+  $request = Invoke-RestMethod -Uri $uri -Headers $header -Method Post -Body $body
   Write-Host ""
   Write-Host -ForegroundColor Green "Initiator Group folder ""$foldername"" successfully created"
+  return $true
   }
   catch{
     Get-XtremErrorMsg -errordata $result
+    return $false
  }
 }
 
@@ -532,12 +544,14 @@ $result =
   }
 "@
   $uri = "https://$xioname/api/json/types/ig-folders/"
-  Invoke-RestMethod -Uri $uri -Headers $header -Method Post -Body $body
+  $request = Invoke-RestMethod -Uri $uri -Headers $header -Method Post -Body $body
   Write-Host ""
   Write-Host -ForegroundColor Green "Initiator Group folder ""$foldername"" successfully created"
+  return $true
   }
   catch{
     Get-XtremErrorMsg -errordata $result
+    return $false
  }
 }
 
@@ -631,13 +645,15 @@ Function New-XtremInitiator([string]$xioname,[string]$username,[string]$password
    }
 "@
 
-   $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method POST -Body $body)
+   $request = (Invoke-RestMethod -Uri $uri -Headers $header -Method POST -Body $body)
    Write-Host ""
    Write-Host -ForegroundColor Green "Successfully created initiator ""$initiatorname"" with address ""$address"" in initiator group ""$igname"""
    Write-Host ""
+   return $true
    }
    catch{
     Get-XtremErrorMsg -errordata $result
+    return $false
    }
 }
 
@@ -855,12 +871,14 @@ Function New-XtremVolumeMapping([string]$xioname,[string]$username,[string]$pass
     }
 "@
     $uri = "https://$xioname/api/json/types/lun-maps/"
-    Invoke-RestMethod -Uri $uri -Headers $header -Method Post -Body $body
+    $request = Invoke-RestMethod -Uri $uri -Headers $header -Method Post -Body $body
     Write-Host ""
     Write-Host -ForegroundColor Green "Volume ""$volname"" successfully mapped to initiator group ""$initgroup"""
+    return $true
    }
    catch{
     Get-XtremErrorMsg($result)
+    return $false
    }  
 
 }
@@ -882,14 +900,16 @@ Function Remove-XtremVolumeMapping([string]$xioname,[string]$username,[string]$p
     Write-Host $mapname
     $header = Get-XtremAuthHeader -username $username -password $password 
     $uri = "https://$xioname/api/json/types/lun-maps/$mapname"
-    $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method DELETE)
+    $request = (Invoke-RestMethod -Uri $uri -Headers $header -Method DELETE)
 
     Write-Host ""
     Write-Host -ForegroundColor Green "Successfully deleted mapping of volume ""$volname"" from host/ig ""$igname"""
     Write-Host ""
+    return $true
    }
    catch{
     Get-XtremErrorMsg -errordata $result
+    return $false
    }
 
 }
@@ -932,7 +952,7 @@ Function Get-XtremClusterName ([string]$xioname,[object]$header){
 
 Function Get-XtremErrorMsg([AllowNull()][object]$errordata){   
     $ed = $errordata
-   
+    
   try{ 
     $ed = $_.Exception.Response.GetResponseStream()
     $reader = New-Object System.IO.StreamReader($ed)
@@ -941,11 +961,12 @@ Function Get-XtremErrorMsg([AllowNull()][object]$errordata){
     $errormsg = $errorcontent.message
     Write-Host ""
     Write-Host -ForegroundColor Red "Error: $errormsg"
+    
     }
    catch{
     Write-Host ""
     Write-Host -ForegroundColor Red "Error: XtremIO name not resolveable"
-
+    
    } 
   
 }
@@ -999,6 +1020,9 @@ function Edit-XtremPassword()
    $global:XtremPassword = Read-Host -Prompt "Enter New XtremIO Password" -AsSecureString
 
   
+
+}
+function Get-XtremGlobalCredStatus(){
 
 }
 
