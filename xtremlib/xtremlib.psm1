@@ -134,8 +134,8 @@ Function Get-XtremVolumeInfo([string]$xioname,[string]$username,[string]$passwor
     
 }
 
-#Creates a Volume
-Function New-XtremVolume([string]$xioname,[string]$username,[string]$password,[string]$volname,[string]$volsize){
+#Creates a Volume. If no folder specified, defaults to root. 
+Function New-XtremVolume([string]$xioname,[string]$username,[string]$password,[string]$volname,[string]$volsize,[string]$folder){
  
  if($global:XtremUsername){
   $username = $global:XtremUsername
@@ -143,6 +143,10 @@ Function New-XtremVolume([string]$xioname,[string]$username,[string]$password,[s
   $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
   $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
   }
+
+  if(!$folder){
+ $folder = "/"
+ }
  
  $result=
   try{
@@ -150,13 +154,15 @@ Function New-XtremVolume([string]$xioname,[string]$username,[string]$password,[s
    $body = @"
    {
       "vol-name":"$volname",
-      "vol-size":"$volsize"
+      "vol-size":"$volsize",
+      "parent-folder-id":"$folder"
    }
 "@
    $uri = "https://$xioname/api/json/types/volumes/"
    Invoke-RestMethod -Uri $uri -Headers $header -Method Post -Body $body
    Write-Host ""
    Write-Host -ForegroundColor Green "Successfully create volume ""$volname"" with $volsize of capacity" 
+   
   }
   catch{
    Get-XtremErrorMsg($result)
@@ -244,7 +250,7 @@ Function Get-XtremSnapshots([string]$xioname,[string]$username,[string]$password
 }
 
 #Creates a Snapshot of a Volume
-Function New-XtremSnapshot([string]$xioname,[string]$username,[string]$password,[string]$volname,[string]$snapname){
+Function New-XtremSnapshot([string]$xioname,[string]$username,[string]$password,[string]$volname,[string]$snapname,[string]$folder){
 
 if($global:XtremUsername){
   $username = $global:XtremUsername
@@ -253,13 +259,18 @@ if($global:XtremUsername){
   $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
   }
 
+if(!$folder){
+ $folder = "/"
+}
+
 $result =
  try{
  $header = Get-XtremAuthHeader -username $username -password $password
  $body = @"
   {
     "ancestor-vol-id":"$volname",
-    "snap-vol-name":"$snapname"
+    "snap-vol-name":"$snapname",
+    "folder-id":"$folder"
   }
 "@
   $uri = "https://$xioname/api/json/types/snapshots/"
@@ -309,15 +320,131 @@ Function Remove-XtremSnapShot([string]$xioname,[string]$username,[string]$passwo
 
 ######### VOLUME FOLDER COMMANDS #########
 
+#Returns list of XtremIO Initiator Group Folders
+Function Get-XtremVolumeFolders([string]$xioname,[string]$username,[string]$password){
+
+  if($global:XtremUsername){
+  $username = $global:XtremUsername
+  $xioname = $global:XtremName
+  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
+  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+  }
+
+
+ $result=
+  try{  
+    $header = Get-XtremAuthHeader -username $username -password $password 
+    $uri = "https://$xioname/api/json/types/volume-folders/"
+    $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get).folders
+    
+    return $data | Select-Object @{Name="Folder Name";Expression={$_.name}} 
+    
+   }
+   catch{
+    Get-XtremErrorMsg -errordata $result
+   }
+}
+
+#Returns details of an XtremIO Volume Folder. Defaults to root if foldername not entered 
+Function Get-XtremVolumeFolderInfo([string]$xioname,[string]$username,[string]$password,[string]$foldername){
+    
+    if($global:XtremUsername){
+  $username = $global:XtremUsername
+  $xioname = $global:XtremName
+  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
+  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+  }
+
+  if(!$foldername){
+ $foldername = "/"
+}
+
+
+ $result=
+  try{  
+    $header = Get-XtremAuthHeader -username $username -password $password 
+    $uri = "https://$xioname/api/json/types/volume-folders/?name=$foldername"
+    $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get).content
+
+    $vollist = @()
+   
+
+     for($i = 0; $i -lt $data.'direct-list'.Count ;$i++)
+     {
+       $vollist = $vollist + $data.'direct-list'[$i][1]
+       
+     }
+     
+     
+     $format =
+    @{Expression={$data.'folder-id'[1]};Label="Folder Name";width=15;alignment="Center"},
+    @{Expression={$data.'parent-folder-id'[1]};Label="Parent Folder";width=15;alignment="Center"},
+    @{Expression={$vollist};Label="Volumes";width=150}
+     
+    
+    return $data |Format-Table $format
+    
+   }
+   catch{
+    Get-XtremErrorMsg -errordata $result
+   }
+}
+
+#Create a new Volume Folder. If no parent folder is specified, defaults to root.
+Function New-XtremVolumeFolder([string]$xioname,[string]$username,[string]$password,[string]$foldername,[string]$parentfolderpath){
+
+   if($global:XtremUsername){
+  $username = $global:XtremUsername
+  $xioname = $global:XtremName
+  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
+  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+  }
+
+  
+  if(!$parentfolderpath)
+  {
+   $parentfolderpath = "/"
+  }
+
+
+$result =
+ try{
+ $header = Get-XtremAuthHeader -username $username -password $password
+ $body = @"
+  {
+    "parent-folder-id":"$parentfolder",
+    "caption":"$foldername"
+  }
+"@
+  $uri = "https://$xioname/api/json/types/ig-folders/"
+  Invoke-RestMethod -Uri $uri -Headers $header -Method Post -Body $body
+  Write-Host ""
+  Write-Host -ForegroundColor Green "Initiator Group folder ""$foldername"" successfully created"
+  }
+  catch{
+    Get-XtremErrorMsg -errordata $result
+ }
+}
+
+#Rename a Volume Folder
+Function Edit-XtremVolumeFolder([string]$xioname,[string]$username,[string]$password,[string]$foldername,[string]$changeto){
+
+}
+
+#Delete a Volume Folder
+Function Remove-XtremVolumeFolder([string]$xioname,[string]$username,[string]$password,[string]$foldername){
+
+}
+
 
 
 
 ######### INITIATOR GROUP FOLDER COMMANDS#########
 
-#Returns list of XtremIO Volume Folders
+#Returns list of XtremIO Initiator Group Folders
 Function Get-XtremIGFolders([string]$xioname,[string]$username,[string]$password){
 
-        if($global:XtremUsername){
+  if($global:XtremUsername){
   $username = $global:XtremUsername
   $xioname = $global:XtremName
   $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
@@ -411,16 +538,16 @@ $result =
   }
   catch{
     Get-XtremErrorMsg -errordata $result
-}
-}
-
-#Rename a Volume Folder
-Function Edit-XtremVolumeFolder([string]$xioname,[string]$username,[string]$password,[string]$foldername,[string]$changeto){
-
+ }
 }
 
-#Delete a Volume Folder
-Function Remove-XtremVolumeFolder([string]$xioname,[string]$username,[string]$password,[string]$foldername){
+#Rename an IG Folder
+Function Edit-XtremIGFolder([string]$xioname,[string]$username,[string]$password,[string]$foldername,[string]$changeto){
+
+}
+
+#Delete an IG Folder
+Function Remove-XtremIGFolder([string]$xioname,[string]$username,[string]$password,[string]$foldername){
 
 }
 
