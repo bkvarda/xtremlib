@@ -3,27 +3,34 @@
 # xtremlib
  
 xtremlib is a PowerShell Module that acts as a wrapper for interactions with the XtremIO RESTful API
-This is currently incomplete, I intend to include most API functionality as well as make content more presentable.
-This release is for XIOS 2.4. 
+This release was written and tested against XIOS 2.4, but should also work without issue on 3.0+ as
+none of the RESTful calls leveraged were changed in 3.0. 
 
 
  
 ## Installation
 
-#### Importing the Module 
-Download entire  contents as .zip. Extract the xtremlib folder to your computer. Open a PowerShell session
-and run 'Import-Module <location where you put xtremlib>. xtremlib will now be available for your current session 
+#### Importing the XtremIO Security Certificate 
+Before you can begin using the module, you will need to import the XtremIO security certificate into your Trusted
+Root Certificate Authority. To do this, point your browser to either the IP Address or the hostname of your XtremIO
+cluster. Click the 'security certificate' link to download the certificate, and save it somewhere on the computer
+that will be executing the PS commands. Then, open up mmc, go to the 'Certificates - Current User' snap-in and navigate
+to the 'Trusted Root Certification Authorities' folder. Right click on it, navigate to 'All Tasks', then click 'Import'. 
+Go through the wizard and select the XtremIO certificate you saved earlier when prompted for a certificate file to import.
 
 #### Installing the Module
 Download entire contents as .zip Extract the xtremlib folder to a designated PowerShell module directory. If you do
 not know where your PowerShell module directories are, open up a PowerShell prompt and examine the PSModulePath variable
 by entering '$env:PSModulePath'. Once the folder has been placed in a module directory, module functions will be available
 in PowerShell. 
+
+
  
 ## Usage
 See module manifest for full list of functions. Use the xtremlib functions to get information from and make changes to XtremIO.
 Better documentation will be created, but for now open the *.psm1 file to see the purpose of each function and the required 
-switches/input. One-time credential setting is now possible (first screenshot). Can also specify credentials every command.  
+switches/input. Most function switch input is case-sensitive, so assume that when entering names and information capitalization must
+match. One-time credential setting is now possible (first screenshot). Can also specify credentials every command.  
 Here are some examples:
 
 ![Alt text](http://i.imgur.com/cMSVfho.png "Example with stored credentials")
@@ -34,9 +41,7 @@ Here are some examples:
 
 ## History
  
-Began - 10/22
-Error handling logic added - 10/25
-Most core functions are complete - 10/26 
+Began on 10/22/14 
  
 
 ></content>
