@@ -512,7 +512,7 @@ Function Get-XtremIGFolders([string]$xioname,[string]$username,[string]$password
    }
 }
 
-#Returns details of an XtremIO Volume Folder. Defaults to root if foldername not entered 
+#Returns details of an XtremIO Initiator Group Folder. Defaults to root if foldername not entered 
 Function Get-XtremIGFolderInfo([string]$xioname,[string]$username,[string]$password,[string]$foldername){
     
     if($global:XtremUsername){
@@ -602,7 +602,7 @@ Function Remove-XtremIGFolder([string]$xioname,[string]$username,[string]$passwo
 ######### INITIATOR COMMANDS #########
 
 #Returns List of Initiators
-Function Get-XtremClusterInitiators([string]$xioname,[string]$username,[string]$password){
+Function Get-XtremInitiators([string]$xioname,[string]$username,[string]$password){
    
    if($global:XtremUsername){
   $username = $global:XtremUsername
@@ -1144,7 +1144,7 @@ function Edit-XtremName([string] $xioname)
 }
 
 #Edits the Global XtremeUserName variable
-function Edit-XtremName([string] $username)
+function Edit-XtremUsername([string] $username)
 {
   if($username)
   {
