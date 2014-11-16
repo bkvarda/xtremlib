@@ -23,7 +23,27 @@ $global:XtremName =$null
 
 #Returns Various XtremIO Statistics
 Function Get-XtremClusterStatus ([string]$xioname,[string]$username,[string]$password)
-{
+{ 
+  <#
+     .DESCRIPTION
+      Retrieves general XtremIO system statistics
+
+      .PARAMETER $xioname
+      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $username
+      Username for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $password
+      Password for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .EXAMPLE
+      Get-XtremClusterStatus
+
+      .EXAMPLE
+      Get-XtremclusterStatus -xioname 10.4.45.24 -username admin -password Xtrem10
+
+  #>
 
   if($global:XtremUsername){
   $username = $global:XtremUsername
@@ -39,19 +59,9 @@ Function Get-XtremClusterStatus ([string]$xioname,[string]$username,[string]$pas
     $uri = "https://$xioname/api/json/types/clusters/?name=$formattedname"
     $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get).content
 
-    $format =`
-    @{Expression={$data.name};Label="System Name";width=16;alignment="Center"},
-    @{Expression={$data.'sys-psnt-serial-number'};Label="Serial Number";width=14;alignment="Center"}, `
-    @{Expression={$data.'sys-health-state'};Label="Health Status";width=13;alignment="Center"},
-    @{Expression={$data.'sys-sw-version'};Label="SW Version";width=10;alignment="Center"},
-    @{Expression={$data.'num-of-bricks'};Label="Bricks";width=7;alignment="Center"},
-    @{Expression={$data.'dedup-ratio-text'};Label="Dedupe Ratio";width=12;alignment="Center"},
-    @{Expression={[decimal]::round(($data.'space-in-use')/1048576)};Label="Phys Capacity Used (GB)";width=24;alignment="Center"},
-    @{Expression={[decimal]::round(($data.'logical-space-in-use')/1048576)};Label="Log Capacity Used (GB)";width=23;alignment="Center"},
-    @{Expression={$data.'num-of-vols'};Label="# of Volumes";width=12;alignment="Center"},
-    @{Expression={$data.iops};Label="IOPS";width=10}
+    
 
-    return $data | Format-Table $format
+    return $data
    }
    catch{
     Get-XtremErrorMsg -errordata $result
@@ -69,6 +79,28 @@ Function Get-XtremEvents([string]$xioname,[string]$username,[string]$password){
 
 #Returns List of Volumes
 Function Get-XtremVolumes([string]$xioname,[string]$username,[string]$password){
+
+  <#
+     .DESCRIPTION
+      Retrieves list of Volumes
+
+      .PARAMETER $xioname
+      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $username
+      Username for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $password
+      Password for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .EXAMPLE
+      Get-XtremVolumes
+
+      .EXAMPLE
+      Get-XtremVolumes -xioname 10.4.45.24 -username admin -password Xtrem10
+
+  #>
+
   if($global:XtremUsername){
   $username = $global:XtremUsername
   $xioname = $global:XtremName
@@ -80,9 +112,9 @@ Function Get-XtremVolumes([string]$xioname,[string]$username,[string]$password){
   try{  
     $header = Get-XtremAuthHeader -username $username -password $password
     $uri = "https://$xioname/api/json/types/volumes"
-    $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get)
+    $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get).volumes
 
-    return $data.volumes | Select-Object @{Name="Volume Name";Expression={$_.name}} 
+    return $data
    }
    catch{
     Get-XtremErrorMsg -errordata $result
@@ -92,6 +124,30 @@ Function Get-XtremVolumes([string]$xioname,[string]$username,[string]$password){
 
 #Returns Statistics for a Specific Volume or Snapshot
 Function Get-XtremVolumeInfo([string]$xioname,[string]$username,[string]$password,[string]$volname){
+  
+   <#
+     .DESCRIPTION
+      Retrieves information about an XtremIO volume or snapshot
+
+      .PARAMETER $xioname
+      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $username
+      Username for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $password
+      Password for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $volname
+      Name of the volume you would like information for
+
+      .EXAMPLE
+      Get-XtremVolumeInfo -volname testvol
+
+      .EXAMPLE
+      Get-XtremVolumeInfo -xioname 10.4.45.24 -username admin -password Xtrem10 -volname testvol
+
+  #>
    
    if($global:XtremUsername){
   $username = $global:XtremUsername
@@ -106,26 +162,8 @@ Function Get-XtremVolumeInfo([string]$xioname,[string]$username,[string]$passwor
     $header = Get-XtremAuthHeader -username $username -password $password 
     $uri = "https://$xioname/api/json/types/volumes/?name=$volname"
     $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get).content
-    $hosts = @()
-    
-    $i = 0
-    while($i -lt $data.'lun-mapping-list'.Count)
-    {
-      $hosts = $hosts + $data.'lun-mapping-list'[$i][0][1]
-      $i++
-    }
-    
-        $format =`
-    @{Expression={$data.name};Label="Volume Name";width=15;alignment="Center"},
-    @{Expression={[decimal]::round(($data.'vol-size')/1048576)};Label="Size (GB)";width=10;alignment="Center"}, `
-    @{Expression={[decimal]::round(($data.'logical-space-in-use'))/1048576};Label="Logical Capacity Used (GB)";width=24;alignment="Center"},
-    @{Expression={$data.index};Label="Volume ID";width=10;alignment="Center"},
-    @{Expression={$data.iops};Label="IOPS";width=7;alignment="Center"},
-    @{Expression={$data.'ancestor-vol-id' |Select-Object -Index 1 };Label="Parent Volume";width=15;alignment="Center"},
-    @{Expression={$data.'creation-time'};Label="Time Created";width=20;alignment="Center"},
-    @{Expression={$hosts};Label="Attached Hosts";width=100}
    
-    return $data | Format-Table $format
+    return $data
   
    }
    catch{
@@ -136,6 +174,38 @@ Function Get-XtremVolumeInfo([string]$xioname,[string]$username,[string]$passwor
 
 #Creates a Volume. If no folder specified, defaults to root. 
 Function New-XtremVolume([string]$xioname,[string]$username,[string]$password,[string]$volname,[string]$volsize,[string]$folder){
+
+ <#
+     .DESCRIPTION
+      Creates a new volume. Returns true if successful.
+
+      .PARAMETER $xioname
+      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $username
+      Username for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $password
+      Password for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $volname
+      Name of the volume you would like information for
+
+      .PARAMETER $volsize
+      Size of the volume you want to create with trailing 'm', for MB, 'g' GB, 't' for TB
+
+      .PARAMETER $folder 
+      Optional parameter. Requires full path format IE /folder1/folder2. Defaults to root
+
+      .EXAMPLE
+      New-XtremVolume -volname testvol -volsize 1048m
+
+      .EXAMPLE
+      New-XtremVolume -xioname 10.4.45.24 -username admin -password Xtrem10 -volname testvol -volsize 1048m
+
+  #>
+
+ 
  
  if($global:XtremUsername){
   $username = $global:XtremUsername
@@ -174,6 +244,36 @@ Function New-XtremVolume([string]$xioname,[string]$username,[string]$password,[s
 
 #Modify a Volume 
 Function Edit-XtremVolume([string]$xioname,[string]$username,[string]$password,[string]$volname,[string]$volsize){
+
+   <#
+     .DESCRIPTION
+      Modifies an existing volume. Returns true if successful. 
+
+      .PARAMETER $xioname
+      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $username
+      Username for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $password
+      Password for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $volname
+      Name of the volume you would like information for
+
+      .PARAMETER $volsize
+      New size of volume with trailing 'm', for MB, 'g' GB, 't' for TB
+
+      .PARAMETER $folder 
+      Optional parameter. 
+
+      .EXAMPLE
+      Edit-XtremVolume -volname testvol -volsize 2048m
+
+      .EXAMPLE
+      Edit-XtremVolume -xioname 10.4.45.24 -username admin -password Xtrem10 -volname testvol -volsize 1048m
+
+  #>
   
   if($global:XtremUsername){
   $username = $global:XtremUsername
@@ -207,6 +307,30 @@ Function Edit-XtremVolume([string]$xioname,[string]$username,[string]$password,[
 
 #Deletes a Volume
 Function Remove-XtremVolume([string]$xioname,[string]$username,[string]$password,[string]$volname){
+
+  <#
+     .DESCRIPTION
+      Deletes an existing volume. Returns true if successful. 
+
+      .PARAMETER $xioname
+      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $username
+      Username for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $password
+      Password for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $volname
+      Name of the volume you would like to remove 
+
+      .EXAMPLE
+      Remove-XtremVolume -volname testvol
+
+      .EXAMPLE
+      Remove-XtremVolume -xioname 10.4.45.24 -username admin -password Xtrem10 -volname testvol
+
+  #>
  
  if($global:XtremUsername){
   $username = $global:XtremUsername
@@ -232,6 +356,27 @@ Function Remove-XtremVolume([string]$xioname,[string]$username,[string]$password
 
 #Returns List of Snapshots
 Function Get-XtremSnapshots([string]$xioname,[string]$username,[string]$password){
+
+  <#
+     .DESCRIPTION
+      Retrieves list of snapshots 
+
+      .PARAMETER $xioname
+      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $username
+      Username for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $password
+      Password for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .EXAMPLE
+      Get-XtremSnapshots
+
+      .EXAMPLE
+      Get-XtremSnapshots -xioname 10.4.45.24 -username admin -password Xtrem10
+
+  #>
  
  if($global:XtremUsername){
   $username = $global:XtremUsername
@@ -245,9 +390,9 @@ Function Get-XtremSnapshots([string]$xioname,[string]$username,[string]$password
   try{  
     $header = Get-XtremAuthHeader -username $username -password $password 
     $uri = "https://$xioname/api/json/types/snapshots/"
-    $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get)
+    $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get).snapshots
     
-    return $data.snapshots | Select-Object @{Name="Snapshot Name";Expression={$_.name}} 
+    return $data
    }
    catch{
     Get-XtremErrorMsg -errordata $result
@@ -257,6 +402,39 @@ Function Get-XtremSnapshots([string]$xioname,[string]$username,[string]$password
 
 #Creates a Snapshot of a Volume
 Function New-XtremSnapshot([string]$xioname,[string]$username,[string]$password,[string]$volname,[string]$snapname,[string]$folder){
+
+ <#
+     .DESCRIPTION
+      Creates a snapshot of an existing volume
+
+      .PARAMETER $xioname
+      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $username
+      Username for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $password
+      Password for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $volname
+      Name of the volume you would like to snap
+
+      .PARAMETER $snapname
+      Name of the new snapshot you are creating
+
+      .PARAMETER $folder
+      Optional parameter. Full path of the folder you want the snapshot created in - I.E /folder1/folder2.Defaults to root.
+
+      .EXAMPLE
+      New-XtremSnapshot -volname testvol -snapname testsnap
+
+      .EXAMPLE
+      New-XtremSnapshot -volname testvol -snapname testsnap -folder /testfolder/snaps
+
+      .EXAMPLE
+      Get-XtremSnapshots -xioname 10.4.45.24 -username admin -password Xtrem10
+
+  #>
 
 if($global:XtremUsername){
   $username = $global:XtremUsername
@@ -291,7 +469,7 @@ $result =
   }
 }
 
-#Create Snapshots from a Folder <NEED TO TEST>
+#Create Snapshots from a Folder <NOT COMPLETE>
 Function New-XtremSnapFolder([string]$xioname,[string]$username,[string]$password,[string]$foldertosnap,[string]$snapfoldername,[string]$snapsuffix){
 
   if($global:XtremUsername){
@@ -339,6 +517,30 @@ Function New-XtremSnapSet([string]$xioname,[string]$username,[string]$password,[
 
 #Deletes an XtremIO Snapshot (can probably get rid of this, Remove-XtremVolume also works on snaps)
 Function Remove-XtremSnapShot([string]$xioname,[string]$username,[string]$password,[string]$snapname){
+
+ <#
+     .DESCRIPTION
+      Deletes a snapshot
+
+      .PARAMETER $xioname
+      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $username
+      Username for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $password
+      Password for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $snapname
+      Name of the snapshot you would like to remove
+
+      .EXAMPLE
+      Remove-XtremSnapshot -snapname testsnap
+
+      .EXAMPLE
+      Remove-XtremSnapshot -snapname testnap -xioname 10.4.45.24 -username admin -password Xtrem10
+
+  #>
  
  if($global:XtremUsername){
   $username = $global:XtremUsername
@@ -367,6 +569,27 @@ Function Remove-XtremSnapShot([string]$xioname,[string]$username,[string]$passwo
 #Returns list of XtremIO Initiator Group Folders
 Function Get-XtremVolumeFolders([string]$xioname,[string]$username,[string]$password){
 
+ <#
+     .DESCRIPTION
+      Retrieves list of volume folders 
+
+      .PARAMETER $xioname
+      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $username
+      Username for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $password
+      Password for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .EXAMPLE
+      Get-XtremVolumeFolders
+
+      .EXAMPLE
+      Get-XtremVolumeFolders -xioname 10.4.45.24 -username admin -password Xtrem10
+
+  #>
+
   if($global:XtremUsername){
   $username = $global:XtremUsername
   $xioname = $global:XtremName
@@ -381,7 +604,7 @@ Function Get-XtremVolumeFolders([string]$xioname,[string]$username,[string]$pass
     $uri = "https://$xioname/api/json/types/volume-folders/"
     $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get).folders
     
-    return $data | Select-Object @{Name="Folder Name";Expression={$_.name}} 
+    return $data
     
    }
    catch{
@@ -391,6 +614,33 @@ Function Get-XtremVolumeFolders([string]$xioname,[string]$username,[string]$pass
 
 #Returns details of an XtremIO Volume Folder. Defaults to root if foldername not entered 
 Function Get-XtremVolumeFolderInfo([string]$xioname,[string]$username,[string]$password,[string]$foldername){
+
+ <#
+     .DESCRIPTION
+      Retrieves details about a specific volume folder
+
+      .PARAMETER $xioname
+      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $username
+      Username for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $password
+      Password for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $foldername
+      Full path of the folder you want info about - I.E. /folder1/snaps
+
+      .EXAMPLE
+      Get-XtremVolumeFolderInfo
+
+      .EXAMPLE
+      Get-XtremVolumeFolderInfo -foldername /folder1/volumes
+
+      .EXAMPLE
+      Get-XtremVolumeFolderInfo -xioname 10.4.45.24 -username admin -password Xtrem10 -foldername /folder1/volumes
+
+  #>
     
     if($global:XtremUsername){
   $username = $global:XtremUsername
@@ -408,25 +658,9 @@ Function Get-XtremVolumeFolderInfo([string]$xioname,[string]$username,[string]$p
   try{  
     $header = Get-XtremAuthHeader -username $username -password $password 
     $uri = "https://$xioname/api/json/types/volume-folders/?name=$foldername"
-    $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get).content
-
-    $vollist = @()
-   
-
-     for($i = 0; $i -lt $data.'direct-list'.Count ;$i++)
-     {
-       $vollist = $vollist + $data.'direct-list'[$i][1]
-       
-     }
-     
-     
-     $format =
-    @{Expression={$data.'folder-id'[1]};Label="Folder Name";width=15;alignment="Center"},
-    @{Expression={$data.'parent-folder-id'[1]};Label="Parent Folder";width=15;alignment="Center"},
-    @{Expression={$vollist};Label="Volumes";width=150}
-     
+    $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get).content 
     
-    return $data |Format-Table $format
+    return $data
     
    }
    catch{
@@ -436,6 +670,36 @@ Function Get-XtremVolumeFolderInfo([string]$xioname,[string]$username,[string]$p
 
 #Create a new Volume Folder. If no parent folder is specified, defaults to root.
 Function New-XtremVolumeFolder([string]$xioname,[string]$username,[string]$password,[string]$foldername,[string]$parentfolderpath){
+
+   <#
+     .DESCRIPTION
+      Creates a new volume folder
+
+      .PARAMETER $xioname
+      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $username
+      Username for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $password
+      Password for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $foldername
+      Name of the folder you want to create
+
+      .PARAMETER $parentfolderpath
+      Optional (and defaults to '/'). If not creating in root, need full path - I.E '/folder1/nested'
+
+      .EXAMPLE
+      New-XtremVolumeFolder -foldername NewFolder
+
+      .EXAMPLE
+      New-XtremVolumeFolder -foldername NewFolder -parentfolderpath /folder1/nested
+
+      .EXAMPLE
+      Get-XtremVolumeFolderInfo -xioname 10.4.45.24 -username admin -password Xtrem10 -foldername /folder1/volumes
+
+  #>
 
    if($global:XtremUsername){
   $username = $global:XtremUsername
@@ -490,6 +754,27 @@ Function Remove-XtremVolumeFolder([string]$xioname,[string]$username,[string]$pa
 #Returns list of XtremIO Initiator Group Folders
 Function Get-XtremIGFolders([string]$xioname,[string]$username,[string]$password){
 
+ <#
+     .DESCRIPTION
+      Retrieves list of initiator group folders
+
+      .PARAMETER $xioname
+      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $username
+      Username for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $password
+      Password for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .EXAMPLE
+      Get-XtremIGFolders
+
+      .EXAMPLE
+      Get-XtremIGFolders -xioname 10.4.45.24 -username admin -password Xtrem10
+
+  #>
+
   if($global:XtremUsername){
   $username = $global:XtremUsername
   $xioname = $global:XtremName
@@ -498,13 +783,15 @@ Function Get-XtremIGFolders([string]$xioname,[string]$username,[string]$password
   }
 
 
+
+
  $result=
   try{  
     $header = Get-XtremAuthHeader -username $username -password $password 
     $uri = "https://$xioname/api/json/types/ig-folders/"
     $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get).folders
     
-    return $data | Select-Object @{Name="Folder Name";Expression={$_.name}} 
+    return $data 
     
    }
    catch{
@@ -514,6 +801,33 @@ Function Get-XtremIGFolders([string]$xioname,[string]$username,[string]$password
 
 #Returns details of an XtremIO Initiator Group Folder. Defaults to root if foldername not entered 
 Function Get-XtremIGFolderInfo([string]$xioname,[string]$username,[string]$password,[string]$foldername){
+
+ <#
+     .DESCRIPTION
+      Retrieves details about a specific initiator group folder
+
+      .PARAMETER $xioname
+      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $username
+      Username for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $password
+      Password for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $foldername
+      Full path of the folder you want info about - I.E. /folder1/snaps
+
+      .EXAMPLE
+      Get-XtremIGFolderInfo
+
+      .EXAMPLE
+      Get-XtremIGFolderInfo -foldername /folder1/volumes
+
+      .EXAMPLE
+      Get-XtremIGFolderInfo -xioname 10.4.45.24 -username admin -password Xtrem10 -foldername /folder1/volumes
+
+  #>
     
     if($global:XtremUsername){
   $username = $global:XtremUsername
@@ -522,28 +836,19 @@ Function Get-XtremIGFolderInfo([string]$xioname,[string]$username,[string]$passw
   $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
   }
 
+  if(!$foldername)
+  {
+   $foldername = "/"
+  }
+
 
  $result=
   try{  
     $header = Get-XtremAuthHeader -username $username -password $password 
-    $uri = "https://$xioname/api/json/types/ig-folders/?name=/$foldername"
+    $uri = "https://$xioname/api/json/types/ig-folders/?name=$foldername"
     $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get).content
-
-     $iglist = @()
-
-     for($i = 0; $i -lt $data.'direct-list'.count;$i++)
-     {
-       $iglist = $iglist + $data.'direct-list'[$i][1]
-       
-     }
-     
-     $format =
-    @{Expression={$data.'folder-id'[1]};Label="Folder Name";width=15;alignment="Center"},
-    @{Expression={$data.'parent-folder-id'[1]};Label="Parent Folder";width=15;alignment="Center"},
-    @{Expression={$iglist};Label="Initiator Groups";width=150}
-     
     
-    return $data |Format-Table $format
+    return $data
     
    }
    catch{
@@ -553,6 +858,36 @@ Function Get-XtremIGFolderInfo([string]$xioname,[string]$username,[string]$passw
 
 #Create a new IG Folder. If no parent folder is specified, defaults to root.
 Function New-XtremIGFolder([string]$xioname,[string]$username,[string]$password,[string]$foldername,[string]$parentfolderpath){
+
+  <#
+     .DESCRIPTION
+      Creates a new initiator group folder
+
+      .PARAMETER $xioname
+      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $username
+      Username for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $password
+      Password for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $foldername
+      Name of the folder you want to create
+
+      .PARAMETER $parentfolderpath
+      Optional (and defaults to '/'). If not creating in root, need full path - I.E '/folder1/nested'
+
+      .EXAMPLE
+      New-XtremIGFolder -foldername NewFolder
+
+      .EXAMPLE
+      New-XtremIGFolder -foldername NewFolder -parentfolderpath /folder1/nested
+
+      .EXAMPLE
+      New-XtremIGFolder -xioname 10.4.45.24 -username admin -password Xtrem10 -foldername NewFolder
+
+  #>
 
    if($global:XtremUsername){
   $username = $global:XtremUsername
@@ -603,6 +938,27 @@ Function Remove-XtremIGFolder([string]$xioname,[string]$username,[string]$passwo
 
 #Returns List of Initiators
 Function Get-XtremInitiators([string]$xioname,[string]$username,[string]$password){
+
+  <#
+     .DESCRIPTION
+      Returns list of initiators
+
+      .PARAMETER $xioname
+      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $username
+      Username for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $password
+      Password for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .EXAMPLE
+      Get-XtremInitiators
+
+      .EXAMPLE
+      Get-XtremInitiators -xioname 10.4.45.24 -username admin -password Xtrem10
+
+  #>
    
    if($global:XtremUsername){
   $username = $global:XtremUsername
@@ -620,7 +976,7 @@ Function Get-XtremInitiators([string]$xioname,[string]$username,[string]$passwor
     
 
 
-    return $data | Select-Object @{Name="Initiator Name";Expression={$_.name}} 
+    return $data
    }
    catch{
     Get-XtremErrorMsg -errordata $result
@@ -629,6 +985,30 @@ Function Get-XtremInitiators([string]$xioname,[string]$username,[string]$passwor
 
 #Returns info for a specific XtremIO Initiator
 Function Get-XtremInitiatorInfo([string]$xioname,[string]$username,[string]$password,[string]$initiatorname){
+
+  <#
+     .DESCRIPTION
+      Returns info for a specific initiator
+
+      .PARAMETER $xioname
+      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $username
+      Username for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $password
+      Password for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $initiatorname
+      Name of a specific initiator
+
+      .EXAMPLE
+      Get-XtremInitiatorInfo -initiatorname testinit1
+
+      .EXAMPLE
+      Get-XtremInitiatorInfo -xioname 10.4.45.24 -username admin -password Xtrem10 -initiatorname testinit1
+
+  #>
  
  if($global:XtremUsername){
   $username = $global:XtremUsername
@@ -642,15 +1022,9 @@ Function Get-XtremInitiatorInfo([string]$xioname,[string]$username,[string]$pass
     $header = Get-XtremAuthHeader -username $username -password $password 
     $uri = "https://$xioname/api/json/types/initiators/?name=$initiatorname"
     $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get).content
-    
-    $format =`
-    @{Expression={$data.name};Label="Initiator Name";width=15;alignment="Center"},
-    @{Expression={$data.'port-address'};Label="Address";width=24;alignment="Center"}, `
-    @{Expression={$data.'ig-id'[1]};Label="Initiator Group";width=24;alignment="Center"},
-    @{Expression={$data.index};Label="Index";width=10;alignment="Center"}
 
 
-    return $data |Format-Table $format
+    return $data
    }
    catch{
     Get-XtremErrorMsg -errordata $result
@@ -659,6 +1033,36 @@ Function Get-XtremInitiatorInfo([string]$xioname,[string]$username,[string]$pass
 
 #Creates initiator and adds to initiator group
 Function New-XtremInitiator([string]$xioname,[string]$username,[string]$password,[string]$initiatorname,[string]$address,[string]$igname){
+ 
+  <#
+     .DESCRIPTION
+      Creates a new initiator and adds to an initiator group
+
+      .PARAMETER $xioname
+      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $username
+      Username for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $password
+      Password for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $initiatorname
+      Name of a specific initiator
+
+      .PARAMETER $address
+      WWN of initiator - I.E. 00:00:00:00:00:00:00:10
+
+      .PARAMETER $igname
+      Name of initiator group
+
+      .EXAMPLE
+      New-XtremInitiator -initiatorname testinit1 -address 00:00:00:00:00:00:00:10 -igname testig
+
+      .EXAMPLE
+      New-XtremInitiator -initiatorname testinit1 -address 00:00:00:00:00:00:00:10 -igname testig -xioname 10.4.45.24 -username admin -password Xtrem10
+
+  #>
   
   if($global:XtremUsername){
   $username = $global:XtremUsername
@@ -727,6 +1131,30 @@ Function Edit-XtremInitiator([string]$xioname,[string]$username,[string]$passwor
 #Deletes initiator <NEED TO TEST>
 Function Remove-XtremInitiator([string]$xioname,[string]$username,[string]$password,[string]$initiatorname){
 
+  <#
+     .DESCRIPTION
+      Deletes an initiator
+
+      .PARAMETER $xioname
+      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $username
+      Username for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $password
+      Password for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $initiatorname
+      Name of a initiator you want to delete
+
+      .EXAMPLE
+      Remove-XtremInitiator -initiatorname testinit1
+
+      .EXAMPLE
+      Remove-XtremInitiator -xioname 10.4.45.24 -username admin -password Xtrem10 -initiatorname testinit1
+
+  #>
+
     if($global:XtremUsername){
   $username = $global:XtremUsername
   $xioname = $global:XtremName
@@ -752,6 +1180,27 @@ Function Remove-XtremInitiator([string]$xioname,[string]$username,[string]$passw
 
 #Returns list of XtremIO Initiator Groups
 Function Get-XtremInitiatorGroups([string]$xioname,[string]$username,[string]$password){
+
+  <#
+     .DESCRIPTION
+      Returns list of initiator groups
+
+      .PARAMETER $xioname
+      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $username
+      Username for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $password
+      Password for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .EXAMPLE
+      Get-XtremInitiatorGroups
+
+      .EXAMPLE
+      Get-XtremInitiatorGroups -xioname 10.4.45.24 -username admin -password Xtrem10
+
+  #>
    
    if($global:XtremUsername){
   $username = $global:XtremUsername
@@ -778,6 +1227,30 @@ Function Get-XtremInitiatorGroups([string]$xioname,[string]$username,[string]$pa
 #Returns info for a specific XtremIO initiator group
 Function Get-XtremInitiatorGroupInfo([string]$xioname,[string]$username,[string]$password,[string]$igname){
 
+   <#
+     .DESCRIPTION
+      Returns info for a specific initiator group
+
+      .PARAMETER $xioname
+      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $username
+      Username for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $password
+      Password for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $igname
+      Name of a specific initiator group
+
+      .EXAMPLE
+      Get-XtremInitiatorGroupInfo -igname testig
+
+      .EXAMPLE
+      Get-XtremInitiatorGroupInfo -xioname 10.4.45.24 -username admin -password Xtrem10 -igname testig
+
+  #>
+
      if($global:XtremUsername){
   $username = $global:XtremUsername
   $xioname = $global:XtremName
@@ -792,13 +1265,7 @@ Function Get-XtremInitiatorGroupInfo([string]$xioname,[string]$username,[string]
     $uri = "https://$xioname/api/json/types/initiator-groups/?name=$igname"
     $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get).content
 
-    $format =`
-    @{Expression={$data.name};Label="Initiator Group Name";width=25;alignment="Center"},
-    @{Expression={$data.'num-of-initiators'};Label="# of Initiators";width=15;alignment="Center"}, `
-    @{Expression={$data.'num-of-vols'};Label="# of Volumes";width=12;alignment="Center"},
-    @{Expression={$data.iops};Label="IOPS";width=8;alignment="Center"}
-
-    return $data |Format-Table $format
+    return $data
    }
    catch{
     Get-XtremErrorMsg -errordata $result
@@ -807,7 +1274,7 @@ Function Get-XtremInitiatorGroupInfo([string]$xioname,[string]$username,[string]
 }
 
 #Creates initiator group <THIS IS NOT COMPLETE>
-Function New-XtremInitiatorGroup([string]$xioname,[string]$username,[string]$password,[string]$igname,[array]$initiatorlist,[string]$foldername){
+Function New-XtremInitiatorGroup([string]$xioname,[string]$username,[string]$password,[string]$igname,[string]$foldername){
 
     if($global:XtremUsername){
   $username = $global:XtremUsername
@@ -828,9 +1295,8 @@ Function New-XtremInitiatorGroup([string]$xioname,[string]$username,[string]$pas
     $uri = "https://$xioname/api/json/types/initiator-groups/"
     $body = @"
    {
-      "initiator-list":"$initiatorlist",
       "parent-folder-id":"$foldername",
-      "ig-id":"$igname"
+      "ig-name":"$igname"
    }
 "@
 
@@ -913,6 +1379,30 @@ Function Get-XtremVolumeMappingList([string]$xioname,[string]$username,[string]$
 
 #Returns Volumes mapped by Initiator group/hostname
 Function Get-XtremVolumeMappingInfo([string]$xioname,[string]$username,[string]$password,[string]$igname){
+
+  <#
+     .DESCRIPTION
+      Returns volumes mapped to a initiator group
+
+      .PARAMETER $xioname
+      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $username
+      Username for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $password
+      Password for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $igname
+      Name of initiator group
+
+      .EXAMPLE
+      Get-XtremVolumeMappingInfo -igname testig
+
+      .EXAMPLE
+      Get-XtremVolumeMappingInfo -xioname 10.4.45.24 -username admin -password Xtrem10 -igname testig
+
+  #>
   
    if($global:XtremUsername){
   $username = $global:XtremUsername
@@ -943,7 +1433,7 @@ Function Get-XtremVolumeMappingInfo([string]$xioname,[string]$username,[string]$
 
        }
     }
-   return $maparray |Format-Table -AutoSize
+   return $maparray
 
     }
    catch{
@@ -992,6 +1482,33 @@ Function Get-XtremVolumeMapID([string]$xioname,[string]$username,[string]$passwo
 
 #Maps volume to initiator group
 Function New-XtremVolumeMapping([string]$xioname,[string]$username,[string]$password,[string]$volname,[string]$igname){
+
+  <#
+     .DESCRIPTION
+      Maps a volume to an initiator group
+
+      .PARAMETER $xioname
+      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $username
+      Username for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $password
+      Password for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $igname
+      Name of initiator group you want to map volume to
+
+      .PARAMETER $volname
+      Name of volume you would like to map
+
+      .EXAMPLE
+      New-XtremVolumeMapping -volname testvol -igname testig
+
+      .EXAMPLE
+      New-XtremVolumeMapping -xioname 10.4.45.24 -username admin -password Xtrem10 -volname testvol -igname testig
+
+  #>
   
   if($global:XtremUsername){
   $username = $global:XtremUsername
@@ -1024,6 +1541,33 @@ Function New-XtremVolumeMapping([string]$xioname,[string]$username,[string]$pass
 
 #Removes volume mapping
 Function Remove-XtremVolumeMapping([string]$xioname,[string]$username,[string]$password,[string]$igname,[string]$volname){
+ 
+  <#
+     .DESCRIPTION
+      Unmaps a volume from an initiator group (does not delete the IG or the volume, just unmaps)
+
+      .PARAMETER $xioname
+      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $username
+      Username for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $password
+      Password for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $igname
+      Name of initiator group you want to unmap the volume from
+
+      .PARAMETER $volname
+      Name of volume you would like to unmap
+
+      .EXAMPLE
+      Remove-XtremVolumeMapping -volname testvol -igname testig
+
+      .EXAMPLE
+      Remove-XtremVolumeMapping -xioname 10.4.45.24 -username admin -password Xtrem10 -volname testvol -igname testig
+
+  #>
 
   if($global:XtremUsername){
   $username = $global:XtremUsername
@@ -1102,7 +1646,7 @@ Function Get-XtremErrorMsg([AllowNull()][object]$errordata){
     }
    catch{
     Write-Host ""
-    Write-Host -ForegroundColor Red "Error: XtremIO name not resolveable"
+    Write-Host -ForegroundColor Red "Error: XtremIO name or IP not resolveable. It may have been mistyped. This may also indicate that you have not properly imported the XtremIO certificate."
     
    } 
   
@@ -1110,6 +1654,30 @@ Function Get-XtremErrorMsg([AllowNull()][object]$errordata){
 
 #Defines global username, password, and hostname/ip for PS session 
 function New-XtremSession([string]$xioname,[string]$username,[string]$password) {
+
+   <#
+     .DESCRIPTION
+      Defines global variables (IP/hostname, username, and password) so they do not have to be explicitly defined for subsequent calls.
+      If you do not define any switches, New-XtremSession will prompt you for credentials. This is best for an interactive session.
+      When automating, it is best to run with switches at the beginning of scripts - I.E New-XtremSession -xioname name -username name -password pw.
+      This will not prompt, and you can run other functions further down your script without explicitly sending credential arguments.
+
+      .PARAMETER $xioname
+      IP Address or hostname for XtremIO XMS. Optional if interactive prompts
+
+      .PARAMETER $username
+      Username for XtremIO XMS. Optional if interactive prompts
+
+      .PARAMETER $password
+      Password for XtremIO XMS. Optional if interactive prompts
+
+      .EXAMPLE
+      New-XtremSession
+
+      .EXAMPLE
+      New-XtremSession -xioname 10.4.45.24 -username admin -password Xtrem10
+
+  #>
 
     if($xioname){
     $global:XtremName = $xioname
@@ -1129,6 +1697,22 @@ function New-XtremSession([string]$xioname,[string]$username,[string]$password) 
 #Edits the Global XtremeName (IP/Hostname) variable
 function Edit-XtremName([string] $xioname)
 {
+
+  <#
+     .DESCRIPTION
+      Edits the globally set hostname/IP
+
+      .PARAMETER $xioname
+      IP/hostname for XtremIO XMS. Optional if interactive prompts
+
+      .EXAMPLE
+      New-XtremName -xioname xtremlab
+
+      .EXAMPLE
+      New-XtremName -xioname 192.168.1.50
+
+  #>
+
   if($xioname)
   {
    $global:XtremName = $xioname
@@ -1146,6 +1730,22 @@ function Edit-XtremName([string] $xioname)
 #Edits the Global XtremeUserName variable
 function Edit-XtremUsername([string] $username)
 {
+
+  <#
+     .DESCRIPTION
+      Edits the globally set username
+
+      .PARAMETER $username
+      Username for XtremIO XMS. Optional if interactive prompts
+
+      .EXAMPLE
+      New-XtremName -xioname xtremlab
+
+      .EXAMPLE
+      New-XtremName -xioname 192.168.1.50
+
+  #>
+
   if($username)
   {
    $global:XtremUsername = $username
@@ -1163,6 +1763,15 @@ function Edit-XtremUsername([string] $username)
 #Edits the Global password variable
 function Edit-XtremPassword()
 {
+
+  <#
+     .DESCRIPTION
+      Edits the globally set password and stores as secure string. Only interactive.
+
+      .EXAMPLE
+      New-XtremPassword
+
+  #>
  
    $global:XtremPassword = Read-Host -Prompt "Enter New XtremIO Password" -AsSecureString
 
@@ -1172,9 +1781,69 @@ function Edit-XtremPassword()
 #Clears all globally set parameters
 function Remove-XtremSession(){
 
+  <#
+     .DESCRIPTION
+      Clears the globally set credentials. Use at the end of a session or automation script. Takes no args. 
+
+      .EXAMPLE
+      Remove-XtremSession
+  #>
+
   $global:XtremUsername =$null
   $global:XtremPassword =$null
   $global:XtremName =$null
+
+
+}
+#Returns Get-Help for all 
+function Get-XtremHelp(){
+
+  <#
+     .DESCRIPTION
+      Returns Get-Helps for all supported commands, as well as other help information 
+
+      .EXAMPLE
+      Get-XtremHelp
+
+  #>
+  Write-Host -ForegroundColor Green "Thanks for using xtremlib. Begin by setting global credentials using New-XtremSession, then run other commands without defining credentials or XMS IP/name"
+  Write-Host ""
+  Write-Host -ForegroundColor Green "GENERAL AND SESSION COMMANDS"
+  Write-Host ""
+  Get-Help New-XtremSession
+  Get-Help Edit-XtremName
+  Get-Help Edit-XtremUsername
+  Get-Help Edit-XtremPassword
+  Get-Help Remove-XtremSession
+  Get-Help Get-XtremClusterStatus 
+  Write-Host ""
+  Write-Host -ForegroundColor Green "VOLUME, SNAPSHOT, AND MAPPING COMMANDS"
+  Write-Host ""
+  Get-Help Get-XtremVolumes
+  Get-Help Get-XtremVolumeInfo
+  Get-Help New-XtremVolume
+  Get-Help Edit-XtremVolume
+  Get-Help Remove-XtremVolume
+  Get-Help Get-XtremSnapshots
+  Get-Help New-XtremSnapshot
+  Get-Help Remove-XtremSnapshot
+  Get-Help Get-XtremVolumeMappingInfo
+  Get-Help New-XtremVolumeMapping
+  Get-Help Remove-XtremVolumeMapping
+  Get-Help Get-XtremVolumeFolders
+  Get-Help Get-XtremVolumeFolderInfo
+  Get-Help New-XtremVolumeFolder
+  Get-Help Get-XtremIGFolders
+  Get-Help Get-XtremIGFolderInfo
+  Get-Help New-XtremIGFolder
+  Get-Help Get-XtremInitiators
+  Get-Help Get-XtremInitiatorInfo
+  Get-Help New-XtremInitiator
+  Get-Help Get-XtremInitiatorGroups
+  Get-Help Get-XtremInitiatorGroupInfo
+  #Get-Help New-XtremInitiatorGroup
+  #Get-Help Edit-XtremInitiatorGroup
+  Get-Help Remove-XtremInitiatorGroup
 
 
 }
