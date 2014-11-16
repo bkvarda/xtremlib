@@ -1,0 +1,779 @@
+Windows PowerShell
+Copyright (C) 2013 Microsoft Corporation. All rights reserved.
+
+PS C:\Users\b-brkvar> New-XtremSession
+Enter XtremIO XMS Hostname or IP Address: 10.4.45.77
+Enter XtremIO username: admin
+Enter password: *******
+PS C:\Users\b-brkvar> Get-XtremVolumeInfo -volname navi
+
+Error: obj_not_found
+PS C:\Users\b-brkvar> New-XtremVolume -volname navi -volsize 2048m
+
+Successfully create volume "navi" with 2048m of capacity
+True
+PS C:\Users\b-brkvar> Get-XtremVolumeInfo -volname navi
+
+
+unaligned-io-alerts      : disabled
+small-io-alerts          : disabled
+small-iops               : 0
+dest-snap-list           : {}
+vol-id                   : {ac41308d1db6403bb8a342613b517ae0, navi, 70}
+obj-severity             : information
+num-of-lun-mappings      : 0
+unaligned-rd-bw          : 0
+num-of-dest-snaps        : 0
+iops                     : 0
+acc-num-of-small-wr      : 0
+alignment-offset         : 0
+lb-size                  : 512
+logical-space-in-use     : 0
+unaligned-io-ratio-level : ok
+acc-num-of-rd            : 0
+index                    : 70
+small-rd-bw              : 0
+naa-name                 :
+acc-size-of-wr           : 0
+acc-num-of-small-rd      : 0
+unaligned-rd-iops        : 0
+wr-latency               : 0
+snapgrp-id               : {83a821d72682457c9a52958456b29152, , 69}
+ancestor-vol-id          : {}
+vaai-tp-alerts           : disabled
+creation-time            : 2014-11-17 01:21:50
+rd-bw                    : 0
+xms-id                   : {e9cd1cd25fac4946b212d07d84a67d42, xms, 1}
+compressible             : yes
+small-wr-bw              : 0
+acc-num-of-unaligned-rd  : 0
+lu-name                  :
+unaligned-iops           : 0
+unaligned-bw             : 0
+bw                       : 0
+small-io-ratio-level     : ok
+lun-mapping-list         : {}
+vol-size                 : 2097152
+wr-iops                  : 0
+sys-id                   : {6b6d504bb3fd444184d8038e02dd722d, BLVU-XTRMIO, 1}
+avg-latency              : 0
+rd-latency               : 0
+small-wr-iops            : 0
+small-bw                 : 0
+name                     : navi
+acc-num-of-unaligned-wr  : 0
+unaligned-wr-iops        : 0
+acc-num-of-wr            : 0
+small-io-ratio           : 0
+acc-size-of-rd           : 0
+unaligned-wr-bw          : 0
+small-rd-iops            : 0
+unaligned-io-ratio       : 0
+rd-iops                  : 0
+wr-bw                    : 0
+
+
+
+PS C:\Users\b-brkvar> Get-XtremInitiatorGroups
+
+Initiator Group/Hostname
+------------------------
+afa-esx01
+afa-esx03
+afa-esx02
+afa-esx05
+afa-esx04
+afa-esx06
+
+
+PS C:\Users\b-brkvar> Get-XtremInitiators
+
+href                                                        name
+----                                                        ----
+https://10.4.45.77/api/json/types/initiators/11             afa-esx06-hba1
+https://10.4.45.77/api/json/types/initiators/10             afa-esx05-hba2
+https://10.4.45.77/api/json/types/initiators/12             afa-esx06-hba2
+https://10.4.45.77/api/json/types/initiators/1              afa-esx01-hba1
+https://10.4.45.77/api/json/types/initiators/3              afa-esx02-hba1
+https://10.4.45.77/api/json/types/initiators/2              afa-esx01-hba2
+https://10.4.45.77/api/json/types/initiators/5              afa-esx03-hba1
+https://10.4.45.77/api/json/types/initiators/4              afa-esx02-hba2
+https://10.4.45.77/api/json/types/initiators/7              afa-esx04-hba1
+https://10.4.45.77/api/json/types/initiators/6              afa-esx03-hba2
+https://10.4.45.77/api/json/types/initiators/9              afa-esx05-hba1
+https://10.4.45.77/api/json/types/initiators/8              afa-esx04-hba2
+
+
+PS C:\Users\b-brkvar> New-XtremInitiator -initiatorname naviinit1 -address 00:00:00:00:00:00:00:10
+
+Error: ig_obj_not_found
+False
+PS C:\Users\b-brkvar> New-XtremInitiatorGroup -igname naviigroup
+
+Successfully created initiator group "naviigroup"
+
+True
+PS C:\Users\b-brkvar> Get-XtremInitiatorGroups
+
+Initiator Group/Hostname
+------------------------
+afa-esx01
+afa-esx03
+afa-esx02
+afa-esx05
+afa-esx04
+naviigroup
+afa-esx06
+
+
+PS C:\Users\b-brkvar> New-XtremInitiator -initiatorname naviinit1 -address 00:00:00:00:00:00:00:10 -igname naviigroup
+
+Successfully created initiator "naviinit1" with address "00:00:00:00:00:00:00:10" in initiator group "naviigroup"
+
+True
+PS C:\Users\b-brkvar> New-XtremInitiator -initiatorname naviinit2 -address 00:00:00:00:00:00:00:20 -igname naviigroup
+
+Successfully created initiator "naviinit2" with address "00:00:00:00:00:00:00:20" in initiator group "naviigroup"
+
+True
+PS C:\Users\b-brkvar> Get-XtremInitiators
+
+href                                                        name
+----                                                        ----
+https://10.4.45.77/api/json/types/initiators/11             afa-esx06-hba1
+https://10.4.45.77/api/json/types/initiators/10             afa-esx05-hba2
+https://10.4.45.77/api/json/types/initiators/13             naviinit1
+https://10.4.45.77/api/json/types/initiators/12             afa-esx06-hba2
+https://10.4.45.77/api/json/types/initiators/14             naviinit2
+https://10.4.45.77/api/json/types/initiators/1              afa-esx01-hba1
+https://10.4.45.77/api/json/types/initiators/3              afa-esx02-hba1
+https://10.4.45.77/api/json/types/initiators/2              afa-esx01-hba2
+https://10.4.45.77/api/json/types/initiators/5              afa-esx03-hba1
+https://10.4.45.77/api/json/types/initiators/4              afa-esx02-hba2
+https://10.4.45.77/api/json/types/initiators/7              afa-esx04-hba1
+https://10.4.45.77/api/json/types/initiators/6              afa-esx03-hba2
+https://10.4.45.77/api/json/types/initiators/9              afa-esx05-hba1
+https://10.4.45.77/api/json/types/initiators/8              afa-esx04-hba2
+
+
+PS C:\Users\b-brkvar> Get-XtremInitiatorGroupInfo -igname naviigroup
+
+
+small-iops              : 0
+num-of-initiators       : 2
+obj-severity            : information
+rd-bw                   : 0
+unaligned-rd-bw         : 0
+iops                    : 0
+acc-num-of-small-wr     : 0
+acc-num-of-rd           : 0
+index                   : 7
+small-rd-bw             : 0
+ig-id                   : {529b02e7c94c46d994c5a03cc29b736e, naviigroup, 7}
+acc-size-of-wr          : 0
+acc-num-of-small-rd     : 0
+unaligned-rd-iops       : 0
+num-of-vols             : 0
+xms-id                  : {e9cd1cd25fac4946b212d07d84a67d42, xms, 1}
+unaligned-wr-iops       : 0
+acc-num-of-unaligned-rd : 0
+small-wr-bw             : 0
+unaligned-iops          : 0
+unaligned-bw            : 0
+small-rd-iops           : 0
+wr-iops                 : 0
+small-wr-iops           : 0
+small-bw                : 0
+name                    : naviigroup
+acc-num-of-unaligned-wr : 0
+acc-num-of-wr           : 0
+acc-size-of-rd          : 0
+unaligned-wr-bw         : 0
+bw                      : 0
+rd-iops                 : 0
+wr-bw                   : 0
+
+
+
+PS C:\Users\b-brkvar> New-XtremVolumeMapping -igname naviigroup -volname navi
+
+Volume "navi" successfully mapped to initiator group "naviigroup"
+True
+PS C:\Users\b-brkvar> Get-XtremVolumeMappingInfo -igname naviigroup
+
+Retrieving volume list for host "naviigroup". This request may take a while on arrays with a lot of volumes...
+
+
+                                 Map ID Volume Name                             Host (IG)
+                                 ------ -----------                             ---------
+                                    397 navi                                    naviigroup
+
+
+PS C:\Users\b-brkvar> Get-XtremVolumeMappingInfo -igname naviigroup |Format-Table -AutoSize
+
+Retrieving volume list for host "naviigroup". This request may take a while on arrays with a lot of volumes...
+
+
+Map ID Volume Name Host (IG)
+------ ----------- ---------
+   397 navi        naviigroup
+
+
+PS C:\Users\b-brkvar> Get-XtremInitiatorGroupInfo -igname naviigroup
+
+
+small-iops              : 0
+num-of-initiators       : 2
+obj-severity            : information
+rd-bw                   : 0
+unaligned-rd-bw         : 0
+iops                    : 0
+acc-num-of-small-wr     : 0
+acc-num-of-rd           : 0
+index                   : 7
+small-rd-bw             : 0
+ig-id                   : {529b02e7c94c46d994c5a03cc29b736e, naviigroup, 7}
+acc-size-of-wr          : 0
+acc-num-of-small-rd     : 0
+unaligned-rd-iops       : 0
+num-of-vols             : 1
+xms-id                  : {e9cd1cd25fac4946b212d07d84a67d42, xms, 1}
+unaligned-wr-iops       : 0
+acc-num-of-unaligned-rd : 0
+small-wr-bw             : 0
+unaligned-iops          : 0
+unaligned-bw            : 0
+small-rd-iops           : 0
+wr-iops                 : 0
+small-wr-iops           : 0
+small-bw                : 0
+name                    : naviigroup
+acc-num-of-unaligned-wr : 0
+acc-num-of-wr           : 0
+acc-size-of-rd          : 0
+unaligned-wr-bw         : 0
+bw                      : 0
+rd-iops                 : 0
+wr-bw                   : 0
+
+
+
+PS C:\Users\b-brkvar> New-XtremSnapshot -volname navi -snapname navisnap
+
+Snapshot of volume "navi" with name "navisnap" successfully created
+True
+PS C:\Users\b-brkvar> Get-XtremSnapshots
+
+href                                                        name
+----                                                        ----
+https://10.4.45.77/api/json/types/snapshots/68              donsnap
+https://10.4.45.77/api/json/types/snapshots/71              navisnap
+
+
+PS C:\Users\b-brkvar> Get-XtremVolumeInfo -volname navisnap
+
+
+unaligned-io-alerts      : disabled
+small-io-alerts          : disabled
+small-iops               : 0
+dest-snap-list           : {}
+vol-id                   : {e8a5748267874757842c35cd65f8f1bd, navisnap, 71}
+obj-severity             : information
+num-of-lun-mappings      : 0
+unaligned-rd-bw          : 0
+num-of-dest-snaps        : 0
+iops                     : 0
+acc-num-of-small-wr      : 0
+alignment-offset         : 0
+lb-size                  : 512
+logical-space-in-use     : 0
+unaligned-io-ratio-level : ok
+acc-num-of-rd            : 0
+index                    : 71
+small-rd-bw              : 0
+naa-name                 :
+acc-size-of-wr           : 0
+acc-num-of-small-rd      : 0
+unaligned-rd-iops        : 0
+wr-latency               : 0
+snapgrp-id               : {83a821d72682457c9a52958456b29152, , 69}
+ancestor-vol-id          : {ac41308d1db6403bb8a342613b517ae0, navi, 70}
+vaai-tp-alerts           : disabled
+creation-time            : 2014-11-17 01:32:30
+rd-bw                    : 0
+xms-id                   : {e9cd1cd25fac4946b212d07d84a67d42, xms, 1}
+compressible             : yes
+small-wr-bw              : 0
+acc-num-of-unaligned-rd  : 0
+lu-name                  :
+unaligned-iops           : 0
+unaligned-bw             : 0
+bw                       : 0
+small-io-ratio-level     : ok
+lun-mapping-list         : {}
+vol-size                 : 2097152
+wr-iops                  : 0
+sys-id                   : {6b6d504bb3fd444184d8038e02dd722d, BLVU-XTRMIO, 1}
+avg-latency              : 0
+rd-latency               : 0
+small-wr-iops            : 0
+small-bw                 : 0
+name                     : navisnap
+acc-num-of-unaligned-wr  : 0
+unaligned-wr-iops        : 0
+acc-num-of-wr            : 0
+small-io-ratio           : 0
+acc-size-of-rd           : 0
+unaligned-wr-bw          : 0
+small-rd-iops            : 0
+unaligned-io-ratio       : 0
+rd-iops                  : 0
+wr-bw                    : 0
+
+
+
+PS C:\Users\b-brkvar> New-XtremVolumeMapping -volname navisnap -igname naviigroup
+
+Volume "navisnap" successfully mapped to initiator group "naviigroup"
+True
+PS C:\Users\b-brkvar> Remove-XtremVolumeMapping -volname navi -igname naviigroup
+
+Retrieving volume mapping for volume "navi" and host "naviigroup". This request may take a while on arrays with a lot of
+ volumes...
+
+
+Successfully deleted mapping of volume "navi" from host/ig "naviigroup"
+True
+PS C:\Users\b-brkvar> Get-XtremVolumeInfo -volname navi
+
+
+unaligned-io-alerts      : disabled
+small-io-alerts          : disabled
+small-iops               : 0
+dest-snap-list           : {e8a5748267874757842c35cd65f8f1bd navisnap 71}
+vol-id                   : {ac41308d1db6403bb8a342613b517ae0, navi, 70}
+obj-severity             : information
+num-of-lun-mappings      : 0
+unaligned-rd-bw          : 0
+num-of-dest-snaps        : 1
+iops                     : 0
+acc-num-of-small-wr      : 0
+alignment-offset         : 0
+lb-size                  : 512
+logical-space-in-use     : 0
+unaligned-io-ratio-level : ok
+acc-num-of-rd            : 0
+index                    : 70
+small-rd-bw              : 0
+naa-name                 : 514f0c5181c00043
+acc-size-of-wr           : 0
+acc-num-of-small-rd      : 0
+unaligned-rd-iops        : 0
+wr-latency               : 0
+snapgrp-id               : {83a821d72682457c9a52958456b29152, , 69}
+ancestor-vol-id          : {}
+vaai-tp-alerts           : disabled
+creation-time            : 2014-11-17 01:21:50
+rd-bw                    : 0
+xms-id                   : {e9cd1cd25fac4946b212d07d84a67d42, xms, 1}
+compressible             : yes
+small-wr-bw              : 0
+acc-num-of-unaligned-rd  : 0
+lu-name                  :
+unaligned-iops           : 0
+unaligned-bw             : 0
+bw                       : 0
+small-io-ratio-level     : ok
+lun-mapping-list         : {}
+vol-size                 : 2097152
+wr-iops                  : 0
+sys-id                   : {6b6d504bb3fd444184d8038e02dd722d, BLVU-XTRMIO, 1}
+avg-latency              : 0
+rd-latency               : 0
+small-wr-iops            : 0
+small-bw                 : 0
+name                     : navi
+acc-num-of-unaligned-wr  : 0
+unaligned-wr-iops        : 0
+acc-num-of-wr            : 0
+small-io-ratio           : 0
+acc-size-of-rd           : 0
+unaligned-wr-bw          : 0
+small-rd-iops            : 0
+unaligned-io-ratio       : 0
+rd-iops                  : 0
+wr-bw                    : 0
+
+
+
+PS C:\Users\b-brkvar> Remove-XtremVolume -volname navi
+
+Volume "navi" was successfully deleted
+True
+PS C:\Users\b-brkvar> Get-XtremVolumeInfo -volname navi
+
+Error: obj_not_found
+PS C:\Users\b-brkvar> Get-XtremClusterStatus
+
+
+compression-factor-text           : 1.6:1
+wr-bw-64kb                        : 0
+rd-iops-64kb                      : 0
+obj-severity                      : information
+rd-bw                             : 0
+num-of-rgs                        : 1
+wr-iops-16kb                      : 0
+iops                              : 5
+last-upgrade-attempt-version      :
+wr-iops-gt1mb                     : 0
+wr-latency-64kb                   : 0
+avg-latency-512kb                 : 0
+wr-bw-32kb                        : 7
+rd-latency-256kb                  : 0
+num-of-nodes                      : 2
+wr-bw-by-block                    : 26
+rd-latency-512b                   : 0
+rd-iops-1kb                       : 0
+iscsi-port-speed                  : invalid
+rd-bw-256kb                       : 0
+compression-factor                : 1.620682857404627
+unaligned-rd-iops                 : 0
+num-of-tgs                        : 1
+wr-latency-2kb                    : 0
+wr-bw-2kb                         : 0
+rd-iops-8kb                       : 0
+num-of-vols                       : 70
+wr-iops-by-block                  : 5
+avg-latency-1mb                   : 0
+avg-latency-256kb                 : 0
+wr-latency-512kb                  : 0
+rd-bw-128kb                       : 0
+size-and-capacity                 : 1X10TB
+wr-iops                           : 5
+sys-start-timestamp               : 1415756513
+wr-bw-gt1mb                       : 0
+name                              : BLVU-XTRMIO
+num-of-tars                       : 8
+num-of-ib-switches                : 0
+acc-num-of-unaligned-wr           : 2608412
+dedup-ratio-text                  : 2.8:1
+rd-bw-512b                        : 0
+acc-num-of-wr                     : 13973849708
+wr-latency-1mb                    : 0
+acc-size-of-rd                    : 115255034360
+wr-latency-4kb                    : 304
+dedup-ratio                       : 2.8379183100117098
+rd-latency-1mb                    : 0
+avg-latency-512b                  : 319
+sys-sw-version                    : 3.0.0-44
+rd-latency-16kb                   : 0
+rd-iops-4kb                       : 0
+avg-latency-2kb                   : 0
+wr-bw-128kb                       : 0
+sys-psnt-part-number              : PSNT Not Set
+compression-factor-last-sample    : 1.9411764705882351
+index                             : 1
+rd-iops-256kb                     : 0
+rd-latency-gt1mb                  : 0
+free-ud-ssd-space-in-percent      : 98
+wr-latency-256kb                  : 0
+upgrade-failure-reason            :
+unaligned-wr-bw                   : 0
+rg-max-ud-allowed-in-ssd-units    : 20
+acc-num-of-small-rd               : 3096840
+rd-latency-32kb                   : 0
+num-of-xenvs                      : 4
+sys-stop-type                     : none
+stopped-reason                    : none
+wr-iops-32kb                      : 0
+xms-id                            : {e9cd1cd25fac4946b212d07d84a67d42, xms, 1}
+rd-iops-gt1mb                     : 0
+wr-latency-gt1mb                  : 0
+small-wr-bw                       : 0
+num-of-ssds                       : 25
+mode-switch-status                : none
+sys-health-state                  : healthy
+bw                                : 26
+avg-latency-64kb                  : 0
+wr-bw-512kb                       : 0
+avg-latency                       : 323
+rd-iops-128kb                     : 0
+rd-latency-1kb                    : 0
+unaligned-bw                      : 0
+ud-ssd-space-in-use               : 85020698
+rd-bw-32kb                        : 0
+wr-bw-1mb                         : 0
+wr-bw-512b                        : 0
+avg-latency-8kb                   : 372
+wr-iops-128kb                     : 0
+unaligned-wr-iops                 : 1
+small-rd-iops                     : 0
+wr-bw-256kb                       : 0
+data-reduction-ratio-text         : 4.6:1
+wr-bw                             : 26
+rd-bw-1kb                         : 0
+rd-iops-32kb                      : 0
+small-iops                        : 1
+wr-latency                        : 323
+rd-latency-8kb                    : 0
+wr-bw-16kb                        : 5
+vol-size                          : 4635828224
+unaligned-rd-bw                   : 0
+wr-latency-16kb                   : 453
+rd-bw-by-block                    : 0
+ud-ssd-space                      : 8146708710
+wr-bw-8kb                         : 2
+wr-iops-512b                      : 1
+rd-iops-512b                      : 0
+acc-num-of-small-wr               : 2608412
+rg-min-ud-guaranteed              : 4294967316
+useful-ssd-space-per-ssd          : 390625000
+acc-num-of-rd                     : 13863381617
+data-reduction-ratio              : 4.5993654654781793
+license-id                        : LIC123456789
+vaai-tp-limit-crossing            : healthy
+acc-size-of-wr                    : 119549009214
+shared-memory-in-use-ratio-level  : healthy
+rd-bw-2kb                         : 0
+rd-iops-by-block                  : 0
+rg-max-ud-allowed                 : 4294967316
+chap-authentication-mode          : disabled
+bw-by-block                       : 26
+wr-bw-4kb                         : 8
+chap-discovery-mode               : disabled
+wr-iops-1mb                       : 0
+rd-bw-16kb                        : 0
+acc-num-of-unaligned-rd           : 3096840
+unequal-raid-groups-level         : ok
+unaligned-iops                    : 1
+wr-iops-2kb                       : 0
+sys-mgr-conn-state                : connected
+rd-bw-512kb                       : 0
+wr-latency-128kb                  : 0
+rd-latency-512kb                  : 0
+rd-bw-64kb                        : 0
+sys-id                            : {6b6d504bb3fd444184d8038e02dd722d, BLVU-XTRMIO, 1}
+avg-latency-32kb                  : 455
+brick-id                          :
+rd-bw-1mb                         : 0
+rd-latency-4kb                    : 0
+avg-latency-4kb                   : 304
+sys-activation-timestamp          : 1415756513
+wr-latency-512b                   : 319
+wr-iops-256kb                     : 0
+brick-list                        : {c0070b6d1913426392f667744f864650 X1 1}
+rd-bw-4kb                         : 0
+rd-latency-64kb                   : 0
+num-of-jbods                      : 1
+rd-latency-128kb                  : 0
+rd-latency-2kb                    : 0
+fc-port-speed                     : 8GFC
+space-saving-ratio                : 0.032269043797943799
+compression-mode                  : enabled
+rd-iops-16kb                      : 0
+sc-fp-temperature-monitor-mode    : disabled
+upgrade-state                     : no_upgrade_done
+wr-iops-512kb                     : 0
+avg-latency-128kb                 : 0
+space-in-use                      : 85020698
+wr-latency-8kb                    : 372
+logical-space-in-use              : 468673400
+vaai-tp-limit                     : 0
+rd-iops-1mb                       : 0
+wr-bw-1kb                         : 0
+rg-min-ud-guaranteed-in-ssd-units : 20
+ib-switch-list                    : {}
+sys-psnt-serial-number            : APM00141273454
+wr-iops-1kb                       : 0
+rd-iops-2kb                       : 0
+encryption-mode                   : disabled
+sys-state                         : active
+rd-bw-8kb                         : 0
+avg-latency-gt1mb                 : 0
+last-upgrade-attempt-timestamp    :
+thin-provisioning-ratio           : 0.10109809452680876
+sys-mgr-conn-error-reason         : none
+num-of-upses                      : 2
+naa-sys-id                        : 44969397262
+wr-iops-4kb                       : 1
+wr-iops-64kb                      : 0
+rd-bw-gt1mb                       : 0
+encryption-supported              : False
+small-rd-bw                       : 0
+avg-latency-1kb                   : 0
+rd-iops-512kb                     : 0
+small-wr-iops                     : 1
+wr-iops-8kb                       : 0
+dedup-space-in-use                : 149593744
+num-of-bricks                     : 1
+rd-latency                        : 0
+free-ud-ssd-space-level           : healthy
+max-num-of-ssds-per-rg            : 27
+wr-latency-32kb                   : 455
+iops-by-block                     : 5
+mode-switch-new-mode              : disabled
+shared-memory-efficiency-level    : healthy
+avg-latency-16kb                  : 453
+consistency-state                 : healthy
+wr-latency-1kb                    : 0
+rd-iops                           : 0
+small-bw                          : 0
+
+
+
+PS C:\Users\b-brkvar> Get-XtremVolumeFolders
+
+href                                                        name
+----                                                        ----
+https://10.4.45.77/api/json/types/volume-folders/1          /
+https://10.4.45.77/api/json/types/volume-folders/3          /VDbench-volumes
+https://10.4.45.77/api/json/types/volume-folders/2          /ESX-Cluster-Datastores
+
+
+PS C:\Users\b-brkvar> Get-XtremIGFolders
+
+href                                                        name
+----                                                        ----
+https://10.4.45.77/api/json/types/ig-folders/1              /
+
+
+PS C:\Users\b-brkvar> Get-XtremVolumeFolderInfo /VDbench-volumes
+
+
+small-iops              : 0
+obj-severity            : information
+rd-bw                   : 20
+unaligned-rd-bw         : 0
+iops                    : 8
+acc-num-of-small-wr     : 2608501
+parent-folder-id        : {}
+acc-num-of-rd           : 13863381726
+index                   : 1
+small-rd-bw             : 0
+num-of-direct-objs      : 6
+acc-size-of-wr          : 119548930207
+num-of-subfolders       : 2
+acc-num-of-small-rd     : 3096875
+unaligned-rd-iops       : 0
+empty-vol-blocks        : 0
+num-of-vols             : 70
+xms-id                  : {e9cd1cd25fac4946b212d07d84a67d42, xms, 1}
+subfolder-list          : {4983223a6a6e4851aa8075919c701a8d /VDbench-volumes 3, 62a1a6709298496bb2497d8372b67f68
+                          /ESX-Cluster-Datastores 2}
+non-empty-vol-blocks    : 0
+unaligned-wr-iops       : 5
+acc-num-of-unaligned-rd : 5124630
+folder-id               : {29c885bb11284946ab88dd8bba8f625c, /, 1}
+small-wr-bw             : 0
+unaligned-iops          : 5
+unaligned-bw            : 27
+bw                      : 54
+vol-size                : 4635828224
+wr-iops                 : 5
+direct-list             : {4983223a6a6e4851aa8075919c701a8d /VDbench-volumes 3, 62a1a6709298496bb2497d8372b67f68
+                          /ESX-Cluster-Datastores 2, 8e2791d683544248b327b496053228ea don1 67,
+                          25ade70e20fa48aabfeb8ac5e827ae2f donsnap 68...}
+small-wr-iops           : 0
+small-bw                : 0
+name                    : /
+acc-num-of-unaligned-wr : 39673028
+acc-num-of-wr           : 13973849969
+acc-size-of-rd          : 115255016589
+caption                 : /
+unaligned-wr-bw         : 27
+small-rd-iops           : 0
+rd-iops                 : 3
+wr-bw                   : 34
+
+
+
+PS C:\Users\b-brkvar> Get-XtremVolumeFolderInfo -foldername /VDbench-volumes
+
+
+small-iops              : 0
+obj-severity            : information
+rd-bw                   : 0
+unaligned-rd-bw         : 0
+iops                    : 0
+acc-num-of-small-wr     : 0
+parent-folder-id        : {29c885bb11284946ab88dd8bba8f625c, /, 1}
+acc-num-of-rd           : 13824180416
+index                   : 3
+small-rd-bw             : 0
+num-of-direct-objs      : 64
+acc-size-of-wr          : 118975322772
+num-of-subfolders       : 0
+acc-num-of-small-rd     : 212774
+unaligned-rd-iops       : 0
+empty-vol-blocks        : 0
+num-of-vols             : 64
+xms-id                  : {e9cd1cd25fac4946b212d07d84a67d42, xms, 1}
+subfolder-list          : {}
+non-empty-vol-blocks    : 0
+unaligned-wr-iops       : 0
+acc-num-of-unaligned-rd : 437796
+folder-id               : {4983223a6a6e4851aa8075919c701a8d, /VDbench-volumes, 3}
+small-wr-bw             : 0
+unaligned-iops          : 0
+unaligned-bw            : 0
+bw                      : 0
+vol-size                : 335544320
+wr-iops                 : 0
+direct-list             : {eb3ddb5129614cceb2719dce55a7e2af vbd-disk054 56, 4eba8fcfdcf34db0bb80fabf624c52f1
+                          vbd-disk052 54, 55ca181923ef48438ff1c94a3c7746c6 vbd-disk040 42,
+                          f761dfe8894e4e2fb1fd4704e4ff36d9 vbd-disk046 48...}
+small-wr-iops           : 0
+small-bw                : 0
+name                    : /VDbench-volumes
+acc-num-of-unaligned-wr : 33152822
+acc-num-of-wr           : 13964351425
+acc-size-of-rd          : 110590933602
+caption                 : VDbench-volumes
+unaligned-wr-bw         : 0
+small-rd-iops           : 0
+rd-iops                 : 0
+wr-bw                   : 0
+
+
+
+PS C:\Users\b-brkvar> Get-XtremIGFolderInfo -foldername /
+
+small-iops              : 0
+obj-severity            : information
+rd-bw                   : 100
+unaligned-rd-bw         : 0
+iops                    : 14
+acc-num-of-small-wr     : 2608952
+parent-folder-id        : {}
+acc-num-of-rd           : 13863381845
+index                   : 1
+small-rd-bw             : 0
+num-of-direct-objs      : 7
+acc-size-of-wr          : 119548695336
+num-of-subfolders       : 0
+acc-num-of-small-rd     : 3096908
+unaligned-rd-iops       : 0
+xms-id                  : {e9cd1cd25fac4946b212d07d84a67d42, xms, 1}
+subfolder-list          : {}
+unaligned-wr-iops       : 2
+acc-num-of-unaligned-rd : 5124669
+folder-id               : {531881e6f60e41f0ad3c178cf06dae0b, /, 1}
+small-wr-bw             : 0
+unaligned-iops          : 2
+unaligned-bw            : 15
+bw                      : 115
+wr-iops                 : 2
+direct-list             : {5e94612ba0b04d05a859fd0aad52986d afa-esx01 1, 0db59be224744aa89b83225d383a0707 afa-esx03 3,
+                          60b1459e2ec34ab2bc84b74856ad3487 afa-esx02 2, d99d20687d664b1d81f24cbcb1b8deeb afa-esx05
+                          5...}
+small-wr-iops           : 0
+rd-iops                 : 12
+name                    : /
+acc-num-of-unaligned-wr : 39673885
+acc-num-of-wr           : 13973850777
+acc-size-of-rd          : 115255030604
+caption                 : /
+unaligned-wr-bw         : 15
+small-rd-iops           : 0
+small-bw                : 0
+wr-bw                   : 15

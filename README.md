@@ -40,7 +40,7 @@ Here are some examples (the below use special formatting for output, you can use
 
 ## Command List
 In PowerShell, run Get-XtremHelp to list all of the available commands. Get-Help is also available for each command. 
-You can also refer to examples.txt for more examples. 
+You can also refer to examples.txt for examples and commandlist.txt for full list of commands.  
 ## History
  
 Began on 10/22/14 

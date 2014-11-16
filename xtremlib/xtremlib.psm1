@@ -1841,7 +1841,7 @@ function Get-XtremHelp(){
   Get-Help New-XtremInitiator
   Get-Help Get-XtremInitiatorGroups
   Get-Help Get-XtremInitiatorGroupInfo
-  #Get-Help New-XtremInitiatorGroup
+  Get-Help New-XtremInitiatorGroup
   #Get-Help Edit-XtremInitiatorGroup
   Get-Help Remove-XtremInitiatorGroup
 
