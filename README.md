@@ -40,7 +40,19 @@ Here are some examples (the below use special formatting for output, you can use
 
 ## Command List
 In PowerShell, run Get-XtremHelp to list all of the available commands. Get-Help is also available for each command. 
-You can also refer to examples.txt for examples and commandlist.txt for full list of commands.  
+
+##Licensing
+Licensed under the Apache License, Version 2.0 (the “License”); you may not use this file except in compliance with the License. You may 
+obtain a copy of the License at ![Alt text] (http://www.apache.org/licenses/LICENSE-2.0 "here")
+
+Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an “AS IS” 
+BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions
+and limitations under the License.
+
+##Support
+Please file bugs and issues at the Github issues page. For more general discussions you can contact the EMC Code team at![Alt text] (Google Groups "https://groups.google.com/forum/#!forum/emccode-users"). The code and 
+documentation are released with no warranties or SLAs and are intended to be supported through a community driven process.
+
 ## History
  
 Began on 10/22/14 
