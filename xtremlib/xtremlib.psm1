@@ -1653,7 +1653,7 @@ Function Get-XtremErrorMsg([AllowNull()][object]$errordata){
 }
 
 #Defines global username, password, and hostname/ip for PS session 
-function New-XtremSession([string]$xioname,[string]$username,[string]$password) {
+function New-XtremSession([string]$xioname,[string]$username,[string]$password,[string]$credlocation) {
 
    <#
      .DESCRIPTION
@@ -1670,6 +1670,9 @@ function New-XtremSession([string]$xioname,[string]$username,[string]$password) 
 
       .PARAMETER $password
       Password for XtremIO XMS. Optional if interactive prompts
+      
+      .PARAMETER $credlocation
+      Specifies the location of stored credentials made using the New-XtremSecureCreds function. 
 
       .EXAMPLE
       New-XtremSession
@@ -1677,20 +1680,71 @@ function New-XtremSession([string]$xioname,[string]$username,[string]$password) 
       .EXAMPLE
       New-XtremSession -xioname 10.4.45.24 -username admin -password Xtrem10
 
+      .EXAMPLE
+      New-XtremSession -xioname 10.4.45.24 -credlocation C:\temp
+
   #>
 
     if($xioname){
-    $global:XtremName = $xioname
-    $global:XtremUsername = $username
-    $securepassword = ConvertTo-SecureString $password -AsPlainText -Force
-    $global:XtremPassword =$securepassword
+      #secure creds have already been defined
+      if($credlocation)
+      { 
+        $pwdlocation = $credlocation + "\xiopwd.txt"
+        $userlocation = $credlocation + "\xiouser.txt"
+        $global:XtremName = $xioname
+        $global:XtremUsername = Get-Content $userlocation
+        $global:XtremPassword = Get-Content $pwdlocation | ConvertTo-SecureString 
 
+        Write-Host -ForegroundColor Green "Session variables set"
+        return $true
+      }
+    
+      #plain text creds have been defined as part of the command
+      else{
+        $global:XtremName = $xioname
+        $global:XtremUsername = $username
+        $securepassword = ConvertTo-SecureString $password -AsPlainText -Force
+        $global:XtremPassword =$securepassword
+        
+        Write-Host -ForegroundColor Green "Session variables set"
+        return $true
+
+      }
+    
     }
+   
+    #else it's an interactive session
     else{
     $global:XtremName = Read-Host -Prompt "Enter XtremIO XMS Hostname or IP Address"
     $global:XtremUsername = Read-Host -Prompt "Enter XtremIO username"
     $global:XtremPassword = Read-Host -Prompt "Enter password" -AsSecureString
     }    
+}
+
+#Creates encrypted password files
+function New-XtremSecureCreds([string] $path)
+{
+
+   <#
+     .DESCRIPTION
+      Creates secure credential files so that passwords are not stored in plain text in scripting environments
+      
+      .PARAMETER $path
+      Specifies the location of stored credentials made using the New-XtremSecureCreds function. Do not put trailing '\'
+
+      .EXAMPLE
+      New-XtremSecureCreds -path C:\temp
+
+  #>
+
+  $pwdpath = $path + "\xiopwd.txt"
+  $unamepath = $path + "\xiouser.txt"
+  $creds = Get-Credential
+  $creds.Username | Set-Content $unamepath
+  $creds.Password | ConvertFrom-SecureString | Set-Content $pwdpath 
+
+  Write-Host -ForegroundColor Green "Secure credentials set"
+
 }
 
 
