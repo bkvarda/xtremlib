@@ -64,7 +64,9 @@ Function Get-XtremClusterStatus ([string]$xioname,[string]$username,[string]$pas
     return $data
    }
    catch{
-    Get-XtremErrorMsg -errordata $result
+   $error = (Get-XtremErrorMsg -errordata  $result) 
+   Write-Error $error
+   return $error
    }          
 
 }
@@ -117,7 +119,9 @@ Function Get-XtremVolumes([string]$xioname,[string]$username,[string]$password){
     return $data
    }
    catch{
-    Get-XtremErrorMsg -errordata $result
+   $error = (Get-XtremErrorMsg -errordata  $result) 
+   Write-Error $error
+   return $error
    }
 
 }
@@ -167,7 +171,9 @@ Function Get-XtremVolumeInfo([string]$xioname,[string]$username,[string]$passwor
   
    }
    catch{
-    Get-XtremErrorMsg -errordata $result
+   $error = (Get-XtremErrorMsg -errordata  $result) 
+   Write-Error $error
+   return $error
    }  
     
 }
@@ -229,15 +235,17 @@ Function New-XtremVolume([string]$xioname,[string]$username,[string]$password,[s
    }
 "@
    $uri = "https://$xioname/api/json/types/volumes/"
-   $request = Invoke-RestMethod -Uri $uri -Headers $header -Method Post -Body $body
+   $data = Invoke-RestMethod -Uri $uri -Headers $header -Method Post -Body $body
    Write-Host ""
    Write-Host -ForegroundColor Green "Successfully create volume ""$volname"" with $volsize of capacity"
-   return $true 
+   $href = $data.links.href
+   return (Invoke-RestMethod -Uri $href -Headers $header -Method Get).content 
    
   }
   catch{
-   Get-XtremErrorMsg($result)
-   return $false
+   $error = (Get-XtremErrorMsg -errordata  $result) 
+   Write-Error $error
+   return $error
   }
 
 }
@@ -292,14 +300,16 @@ Function Edit-XtremVolume([string]$xioname,[string]$username,[string]$password,[
    }
 "@
    $uri = "https://$xioname/api/json/types/volumes/?name=$volname"
-   $request = Invoke-RestMethod -Uri $uri -Headers $header -Method Put -Body $body
+   $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Put -Body $body)
    Write-Host ""
    Write-Host -ForegroundColor Green "Successfully modified volume ""$volname"" to have $volsize of capacity" 
-   return $true
+   
+   return (Invoke-RestMethod -Uri $uri -Headers $header -Method Get).content
   }
   catch{
-   Get-XtremErrorMsg($result)
-   return $false
+   $error = (Get-XtremErrorMsg -errordata  $result) 
+   Write-Error $error
+   return $error
   }
 
 
@@ -342,14 +352,17 @@ Function Remove-XtremVolume([string]$xioname,[string]$username,[string]$password
  $result = try{
   $header = Get-XtremAuthHeader -username $username -password $password
   $uri = "https://$xioname/api/json/types/volumes/?name="+$volname
-  $request = Invoke-RestMethod -Uri $uri -Headers $header -Method Delete
+  $data = Invoke-RestMethod -Uri $uri -Headers $header -Method Delete
   Write-Host ""
   Write-Host -ForegroundColor Green  "Volume ""$volname"" was successfully deleted"
+  
   return $true
   }
   catch{
-   Get-XtremErrorMsg -errordata  $result 
-   return $false   
+   $error = (Get-XtremErrorMsg -errordata  $result) 
+   Write-Error $error
+   return $error
+     
   }
  
 }
@@ -395,7 +408,9 @@ Function Get-XtremSnapshots([string]$xioname,[string]$username,[string]$password
     return $data
    }
    catch{
-    Get-XtremErrorMsg -errordata $result
+   $error = (Get-XtremErrorMsg -errordata  $result) 
+   Write-Error $error
+   return $error
    }
 
 }
@@ -464,8 +479,9 @@ $result =
   return $true
   }
   catch{
-    Get-XtremErrorMsg -errordata $result
-    return $false
+   $error = (Get-XtremErrorMsg -errordata  $result) 
+   Write-Error $error
+   return $error
   }
 }
 
@@ -500,8 +516,9 @@ $result =
   return $true
   }
   catch{
-    Get-XtremErrorMsg -errordata $result
-    return $false
+   $error = (Get-XtremErrorMsg -errordata  $result) 
+   Write-Error $error
+   return $error
   }
 
 
@@ -559,8 +576,9 @@ Function Remove-XtremSnapShot([string]$xioname,[string]$username,[string]$passwo
       return $true
      }
      catch{
-      Get-XtremErrorMsg -errordata $result
-      return $false
+        $error = (Get-XtremErrorMsg -errordata  $result) 
+        Write-Error $error
+         return $error
      }
 }
 
@@ -608,7 +626,9 @@ Function Get-XtremVolumeFolders([string]$xioname,[string]$username,[string]$pass
     
    }
    catch{
-    Get-XtremErrorMsg -errordata $result
+   $error = (Get-XtremErrorMsg -errordata  $result) 
+   Write-Error $error
+   return $error
    }
 }
 
@@ -664,7 +684,9 @@ Function Get-XtremVolumeFolderInfo([string]$xioname,[string]$username,[string]$p
     
    }
    catch{
-    Get-XtremErrorMsg -errordata $result
+   $error = (Get-XtremErrorMsg -errordata  $result) 
+   Write-Error $error
+   return $error
    }
 }
 
@@ -731,8 +753,9 @@ $result =
   return $true
   }
   catch{
-    Get-XtremErrorMsg -errordata $result
-    return $false
+   $error = (Get-XtremErrorMsg -errordata  $result) 
+   Write-Error $error
+   return $error
  }
 }
 
@@ -795,7 +818,9 @@ Function Get-XtremIGFolders([string]$xioname,[string]$username,[string]$password
     
    }
    catch{
-    Get-XtremErrorMsg -errordata $result
+   $error = (Get-XtremErrorMsg -errordata  $result) 
+   Write-Error $error
+   return $error
    }
 }
 
@@ -852,7 +877,9 @@ Function Get-XtremIGFolderInfo([string]$xioname,[string]$username,[string]$passw
     
    }
    catch{
-    Get-XtremErrorMsg -errordata $result
+   $error = (Get-XtremErrorMsg -errordata  $result) 
+   Write-Error $error
+   return $error
    }
 }
 
@@ -919,8 +946,9 @@ $result =
   return $true
   }
   catch{
-    Get-XtremErrorMsg -errordata $result
-    return $false
+   $error = (Get-XtremErrorMsg -errordata  $result) 
+   Write-Error $error
+   return $error
  }
 }
 
@@ -979,7 +1007,9 @@ Function Get-XtremInitiators([string]$xioname,[string]$username,[string]$passwor
     return $data
    }
    catch{
-    Get-XtremErrorMsg -errordata $result
+   $error = (Get-XtremErrorMsg -errordata  $result) 
+   Write-Error $error
+   return $error
    }
 }
 
@@ -1027,7 +1057,9 @@ Function Get-XtremInitiatorInfo([string]$xioname,[string]$username,[string]$pass
     return $data
    }
    catch{
-    Get-XtremErrorMsg -errordata $result
+   $error = (Get-XtremErrorMsg -errordata  $result) 
+   Write-Error $error
+   return $error
    }
 }
 
@@ -1090,8 +1122,9 @@ Function New-XtremInitiator([string]$xioname,[string]$username,[string]$password
    return $true
    }
    catch{
-    Get-XtremErrorMsg -errordata $result
-    return $false
+       $error = (Get-XtremErrorMsg -errordata  $result) 
+        Write-Error $error
+        return $error
    }
 }
 
@@ -1122,8 +1155,9 @@ Function Edit-XtremInitiator([string]$xioname,[string]$username,[string]$passwor
    return $true
    }
    catch{
-    Get-XtremErrorMsg -errordata $result
-    return $false
+   $error = (Get-XtremErrorMsg -errordata  $result) 
+   Write-Error $error
+   return $error
    } 
 
 }
@@ -1170,8 +1204,9 @@ Function Remove-XtremInitiator([string]$xioname,[string]$username,[string]$passw
     return $true
    }
    catch{
-    Get-XtremErrorMsg -errordata $result
-    return $false
+   $error = (Get-XtremErrorMsg -errordata  $result) 
+   Write-Error $error
+   return $error
    }
 
 }
@@ -1219,7 +1254,9 @@ Function Get-XtremInitiatorGroups([string]$xioname,[string]$username,[string]$pa
     return $data.'initiator-groups' | Select-Object @{Name="Initiator Group/Hostname";Expression={$_.name}} 
    }
    catch{
-    Get-XtremErrorMsg -errordata $result
+   $error = (Get-XtremErrorMsg -errordata  $result) 
+   Write-Error $error
+   return $error
    }
 
 }
@@ -1268,7 +1305,9 @@ Function Get-XtremInitiatorGroupInfo([string]$xioname,[string]$username,[string]
     return $data
    }
    catch{
-    Get-XtremErrorMsg -errordata $result
+   $error = (Get-XtremErrorMsg -errordata  $result) 
+   Write-Error $error
+   return $error
    }
 
 }
@@ -1307,8 +1346,9 @@ Function New-XtremInitiatorGroup([string]$xioname,[string]$username,[string]$pas
    return $true
    }
    catch{
-    Get-XtremErrorMsg -errordata $result
-    return $false
+   $error = (Get-XtremErrorMsg -errordata  $result) 
+   Write-Error $error
+   return $error
    }
 
 }
@@ -1340,7 +1380,9 @@ Function Remove-XtremInitiatorGroup([string]$xioname,[string]$username,[string]$
     return $true
    }
    catch{
-    Get-XtremErrorMsg -errordata $result
+   $error = (Get-XtremErrorMsg -errordata  $result) 
+   Write-Error $error
+   return $error
    }
 
 }
@@ -1372,7 +1414,9 @@ Function Get-XtremVolumeMappingList([string]$xioname,[string]$username,[string]$
     return $data.'lun-maps' | Select-Object @{Name="Lun Map Name";Expression={$_.name}} 
    }
    catch{
-    Get-XtremErrorMsg -errordata $result
+   $error = (Get-XtremErrorMsg -errordata  $result) 
+   Write-Error $error
+   return $error
    }
 
 }
@@ -1437,7 +1481,9 @@ Function Get-XtremVolumeMappingInfo([string]$xioname,[string]$username,[string]$
 
     }
    catch{
-    Get-XtremErrorMsg -errordata $result
+   $error = (Get-XtremErrorMsg -errordata  $result) 
+   Write-Error $error
+   return $error
    }
 
 }
@@ -1475,7 +1521,9 @@ Function Get-XtremVolumeMapID([string]$xioname,[string]$username,[string]$passwo
 
     }
    catch{
-    Get-XtremErrorMsg -errordata $result
+   $error = (Get-XtremErrorMsg -errordata  $result) 
+   Write-Error $error
+   return $error
    }
 
 }
@@ -1533,8 +1581,9 @@ Function New-XtremVolumeMapping([string]$xioname,[string]$username,[string]$pass
     return $true
    }
    catch{
-    Get-XtremErrorMsg($result)
-    return $false
+       $error = (Get-XtremErrorMsg -errordata  $result) 
+        Write-Error $error
+        return $error
    }  
 
 }
@@ -1589,8 +1638,9 @@ Function Remove-XtremVolumeMapping([string]$xioname,[string]$username,[string]$p
     return $true
    }
    catch{
-    Get-XtremErrorMsg -errordata $result
-    return $false
+   $error = (Get-XtremErrorMsg -errordata  $result) 
+   Write-Error $error
+   return $error
    }
 
 }
@@ -1640,8 +1690,9 @@ Function Get-XtremErrorMsg([AllowNull()][object]$errordata){
     $responseBody = $reader.ReadToEnd(); 
     $errorcontent = $responseBody | ConvertFrom-Json
     $errormsg = $errorcontent.message
-    Write-Host ""
-    Write-Host -ForegroundColor Red "Error: $errormsg"
+
+    Write-Host -ForegroundColor Red $errormsg
+    return $errorcontent
     
     }
    catch{
