@@ -473,10 +473,11 @@ $result =
   }
 "@
   $uri = "https://$xioname/api/json/types/snapshots/"
-  $request = Invoke-RestMethod -Uri $uri -Headers $header -Method Post -Body $body
+  $data = Invoke-RestMethod -Uri $uri -Headers $header -Method Post -Body $body
   Write-Host ""
   Write-Host -ForegroundColor Green "Snapshot of volume ""$volname"" with name ""$snapname"" successfully created"
-  return $true
+  
+  return (Invoke-RestMethod -Uri ($data.links.href) -Method Get -Headers $header).content 
   }
   catch{
    $error = (Get-XtremErrorMsg -errordata  $result) 
