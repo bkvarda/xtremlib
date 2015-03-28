@@ -743,15 +743,18 @@ $result =
  $header = Get-XtremAuthHeader -username $username -password $password
  $body = @"
   {
-    "parent-folder-id":"$parentfolder",
+    "parent-folder-id":"$parentfolderpath",
     "caption":"$foldername"
   }
 "@
-  $uri = "https://$xioname/api/json/types/ig-folders/"
+  $uri = "https://$xioname/api/json/types/volume-folders/"
   $request = Invoke-RestMethod -Uri $uri -Headers $header -Method Post -Body $body
   Write-Host ""
-  Write-Host -ForegroundColor Green "Initiator Group folder ""$foldername"" successfully created"
-  return $true
+  Write-Host -ForegroundColor Green "Volume folder ""$foldername"" successfully created"
+  
+  $data = Invoke-RestMethod -Uri $request.links.href -Headers $header -Method Get
+
+  return $data.content
   }
   catch{
    $error = (Get-XtremErrorMsg -errordata  $result) 
@@ -925,9 +928,9 @@ Function New-XtremIGFolder([string]$xioname,[string]$username,[string]$password,
   }
 
   
-  if(!$parentfolder)
+  if(!$parentfolderpath)
   {
-   $parentfolder = "/"
+   $parentfolderpath = "/"
   }
 
 
@@ -936,7 +939,7 @@ $result =
  $header = Get-XtremAuthHeader -username $username -password $password
  $body = @"
   {
-    "parent-folder-id":"$parentfolder",
+    "parent-folder-id":"$parentfolderpath",
     "caption":"$foldername"
   }
 "@
@@ -944,7 +947,10 @@ $result =
   $request = Invoke-RestMethod -Uri $uri -Headers $header -Method Post -Body $body
   Write-Host ""
   Write-Host -ForegroundColor Green "Initiator Group folder ""$foldername"" successfully created"
-  return $true
+  
+  $data = Invoke-RestMethod -Uri $request.links.href -Headers $header -Method Get
+
+  return $data.content
   }
   catch{
    $error = (Get-XtremErrorMsg -errordata  $result) 
@@ -1120,7 +1126,10 @@ Function New-XtremInitiator([string]$xioname,[string]$username,[string]$password
    Write-Host ""
    Write-Host -ForegroundColor Green "Successfully created initiator ""$initiatorname"" with address ""$address"" in initiator group ""$igname"""
    Write-Host ""
-   return $true
+   
+   $data = Invoke-RestMethod -Uri $request.links.href -Headers $header -Method Get
+
+   return $data.content
    }
    catch{
        $error = (Get-XtremErrorMsg -errordata  $result) 
@@ -1252,7 +1261,7 @@ Function Get-XtremInitiatorGroups([string]$xioname,[string]$username,[string]$pa
     $uri = "https://$xioname/api/json/types/initiator-groups"
     $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get)
 
-    return $data.'initiator-groups' | Select-Object @{Name="Initiator Group/Hostname";Expression={$_.name}} 
+    return $data.'initiator-groups'
    }
    catch{
    $error = (Get-XtremErrorMsg -errordata  $result) 
@@ -1314,7 +1323,7 @@ Function Get-XtremInitiatorGroupInfo([string]$xioname,[string]$username,[string]
 }
 
 #Creates initiator group <THIS IS NOT COMPLETE>
-Function New-XtremInitiatorGroup([string]$xioname,[string]$username,[string]$password,[string]$igname,[string]$foldername){
+Function New-XtremInitiatorGroup([string]$xioname,[string]$username,[string]$password,[string]$igname,[string]$folderpath){
 
     if($global:XtremUsername){
   $username = $global:XtremUsername
@@ -1323,9 +1332,9 @@ Function New-XtremInitiatorGroup([string]$xioname,[string]$username,[string]$pas
   $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
   }
 
-  if(!$foldername){
+  if(!$folderpath){
     
-    $foldername = "/"
+    $folderpath = "/"
 
   }
 
@@ -1335,7 +1344,7 @@ Function New-XtremInitiatorGroup([string]$xioname,[string]$username,[string]$pas
     $uri = "https://$xioname/api/json/types/initiator-groups/"
     $body = @"
    {
-      "parent-folder-id":"$foldername",
+      "parent-folder-id":"$folderpath",
       "ig-name":"$igname"
    }
 "@
@@ -1344,7 +1353,11 @@ Function New-XtremInitiatorGroup([string]$xioname,[string]$username,[string]$pas
    Write-Host ""
    Write-Host -ForegroundColor Green "Successfully created initiator group ""$igname"""
    Write-Host ""
-   return $true
+   
+   $data = Invoke-RestMethod -Uri $request.links.href -Headers $header -Method Get
+
+   return $data.content
+
    }
    catch{
    $error = (Get-XtremErrorMsg -errordata  $result) 
