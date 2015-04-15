@@ -66,7 +66,7 @@ Function Get-XtremClusterStatus ([string]$xioname,[string]$username,[string]$pas
    catch{
    $error = (Get-XtremErrorMsg -errordata  $result) 
    Write-Error $error
-   return $error
+   
    }          
 
 }
@@ -121,7 +121,7 @@ Function Get-XtremVolumes([string]$xioname,[string]$username,[string]$password){
    catch{
    $error = (Get-XtremErrorMsg -errordata  $result) 
    Write-Error $error
-   return $error
+   
    }
 
 }
@@ -173,7 +173,7 @@ Function Get-XtremVolumeInfo([string]$xioname,[string]$username,[string]$passwor
    catch{
    $error = (Get-XtremErrorMsg -errordata  $result) 
    Write-Error $error
-   return $error
+   
    }  
     
 }
@@ -245,7 +245,7 @@ Function New-XtremVolume([string]$xioname,[string]$username,[string]$password,[s
   catch{
    $error = (Get-XtremErrorMsg -errordata  $result) 
    Write-Error $error
-   return $error
+   
   }
 
 }
@@ -309,7 +309,7 @@ Function Edit-XtremVolume([string]$xioname,[string]$username,[string]$password,[
   catch{
    $error = (Get-XtremErrorMsg -errordata  $result) 
    Write-Error $error
-   return $error
+   
   }
 
 
@@ -361,7 +361,7 @@ Function Remove-XtremVolume([string]$xioname,[string]$username,[string]$password
   catch{
    $error = (Get-XtremErrorMsg -errordata  $result) 
    Write-Error $error
-   return $error
+   
      
   }
  
@@ -410,7 +410,7 @@ Function Get-XtremSnapshots([string]$xioname,[string]$username,[string]$password
    catch{
    $error = (Get-XtremErrorMsg -errordata  $result) 
    Write-Error $error
-   return $error
+   
    }
 
 }
@@ -482,7 +482,7 @@ $result =
   catch{
    $error = (Get-XtremErrorMsg -errordata  $result) 
    Write-Error $error
-   return $error
+   
   }
 }
 
@@ -519,7 +519,7 @@ $result =
   catch{
    $error = (Get-XtremErrorMsg -errordata  $result) 
    Write-Error $error
-   return $error
+   
   }
 
 
@@ -579,7 +579,7 @@ Function Remove-XtremSnapShot([string]$xioname,[string]$username,[string]$passwo
      catch{
         $error = (Get-XtremErrorMsg -errordata  $result) 
         Write-Error $error
-         return $error
+         
      }
 }
 
@@ -629,7 +629,7 @@ Function Get-XtremVolumeFolders([string]$xioname,[string]$username,[string]$pass
    catch{
    $error = (Get-XtremErrorMsg -errordata  $result) 
    Write-Error $error
-   return $error
+   
    }
 }
 
@@ -687,7 +687,7 @@ Function Get-XtremVolumeFolderInfo([string]$xioname,[string]$username,[string]$p
    catch{
    $error = (Get-XtremErrorMsg -errordata  $result) 
    Write-Error $error
-   return $error
+   
    }
 }
 
@@ -759,7 +759,7 @@ $result =
   catch{
    $error = (Get-XtremErrorMsg -errordata  $result) 
    Write-Error $error
-   return $error
+   
  }
 }
 
@@ -824,7 +824,7 @@ Function Get-XtremIGFolders([string]$xioname,[string]$username,[string]$password
    catch{
    $error = (Get-XtremErrorMsg -errordata  $result) 
    Write-Error $error
-   return $error
+   
    }
 }
 
@@ -883,7 +883,7 @@ Function Get-XtremIGFolderInfo([string]$xioname,[string]$username,[string]$passw
    catch{
    $error = (Get-XtremErrorMsg -errordata  $result) 
    Write-Error $error
-   return $error
+   
    }
 }
 
@@ -955,7 +955,7 @@ $result =
   catch{
    $error = (Get-XtremErrorMsg -errordata  $result) 
    Write-Error $error
-   return $error
+   
  }
 }
 
@@ -1016,7 +1016,7 @@ Function Get-XtremInitiators([string]$xioname,[string]$username,[string]$passwor
    catch{
    $error = (Get-XtremErrorMsg -errordata  $result) 
    Write-Error $error
-   return $error
+   
    }
 }
 
@@ -1066,7 +1066,7 @@ Function Get-XtremInitiatorInfo([string]$xioname,[string]$username,[string]$pass
    catch{
    $error = (Get-XtremErrorMsg -errordata  $result) 
    Write-Error $error
-   return $error
+   
    }
 }
 
@@ -1134,7 +1134,7 @@ Function New-XtremInitiator([string]$xioname,[string]$username,[string]$password
    catch{
        $error = (Get-XtremErrorMsg -errordata  $result) 
         Write-Error $error
-        return $error
+        
    }
 }
 
@@ -1167,7 +1167,7 @@ Function Edit-XtremInitiator([string]$xioname,[string]$username,[string]$passwor
    catch{
    $error = (Get-XtremErrorMsg -errordata  $result) 
    Write-Error $error
-   return $error
+   
    } 
 
 }
@@ -1216,7 +1216,7 @@ Function Remove-XtremInitiator([string]$xioname,[string]$username,[string]$passw
    catch{
    $error = (Get-XtremErrorMsg -errordata  $result) 
    Write-Error $error
-   return $error
+   
    }
 
 }
@@ -1266,7 +1266,7 @@ Function Get-XtremInitiatorGroups([string]$xioname,[string]$username,[string]$pa
    catch{
    $error = (Get-XtremErrorMsg -errordata  $result) 
    Write-Error $error
-   return $error
+   
    }
 
 }
@@ -1317,7 +1317,7 @@ Function Get-XtremInitiatorGroupInfo([string]$xioname,[string]$username,[string]
    catch{
    $error = (Get-XtremErrorMsg -errordata  $result) 
    Write-Error $error
-   return $error
+   
    }
 
 }
@@ -1362,7 +1362,7 @@ Function New-XtremInitiatorGroup([string]$xioname,[string]$username,[string]$pas
    catch{
    $error = (Get-XtremErrorMsg -errordata  $result) 
    Write-Error $error
-   return $error
+   
    }
 
 }
@@ -1396,7 +1396,7 @@ Function Remove-XtremInitiatorGroup([string]$xioname,[string]$username,[string]$
    catch{
    $error = (Get-XtremErrorMsg -errordata  $result) 
    Write-Error $error
-   return $error
+   
    }
 
 }
@@ -1425,12 +1425,12 @@ Function Get-XtremVolumeMappingList([string]$xioname,[string]$username,[string]$
     $uri = "https://$xioname/api/json/types/lun-maps"
     $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get)
 
-    return $data.'lun-maps' | Select-Object @{Name="Lun Map Name";Expression={$_.name}} 
+    return $data.'lun-maps'
    }
    catch{
    $error = (Get-XtremErrorMsg -errordata  $result) 
    Write-Error $error
-   return $error
+   
    }
 
 }
@@ -1497,7 +1497,7 @@ Function Get-XtremVolumeMappingInfo([string]$xioname,[string]$username,[string]$
    catch{
    $error = (Get-XtremErrorMsg -errordata  $result) 
    Write-Error $error
-   return $error
+   
    }
 
 }
@@ -1537,7 +1537,7 @@ Function Get-XtremVolumeMapID([string]$xioname,[string]$username,[string]$passwo
    catch{
    $error = (Get-XtremErrorMsg -errordata  $result) 
    Write-Error $error
-   return $error
+   
    }
 
 }
@@ -1597,7 +1597,7 @@ Function New-XtremVolumeMapping([string]$xioname,[string]$username,[string]$pass
    catch{
        $error = (Get-XtremErrorMsg -errordata  $result) 
         Write-Error $error
-        return $error
+        
    }  
 
 }
@@ -1642,9 +1642,12 @@ Function Remove-XtremVolumeMapping([string]$xioname,[string]$username,[string]$p
     
   $result=
   try{
-    $mapname = (Get-XtremVolumeMapID -xioname $xioname -username $username -password $password -igname $igname -volname $volname) 
+    $volid = (Get-XtremVolumeInfo -xioname $xioname -volname $volname -username $username -password $password).index
+    $igid = (Get-XtremInitiatorGroupInfo -xioname $xioname -username $username -password $password -igname $igname).index
+    $tgid = "1"
+    $mapname = "$volid"+"_"+"$igid"+"_"+"$tgid"
     $header = Get-XtremAuthHeader -username $username -password $password 
-    $uri = "https://$xioname/api/json/types/lun-maps/$mapname"
+    $uri = "https://$xioname/api/json/types/lun-maps/?name=$mapname"
     $request = (Invoke-RestMethod -Uri $uri -Headers $header -Method DELETE)
 
     Write-Host ""
@@ -1654,7 +1657,7 @@ Function Remove-XtremVolumeMapping([string]$xioname,[string]$username,[string]$p
    catch{
    $error = (Get-XtremErrorMsg -errordata  $result) 
    Write-Error $error
-   return $error
+   
    }
 
 }
