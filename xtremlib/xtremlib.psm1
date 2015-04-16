@@ -127,7 +127,7 @@ Function Get-XtremVolumes([string]$xioname,[string]$username,[string]$password){
 }
 
 #Returns Statistics for a Specific Volume or Snapshot
-Function Get-XtremVolumeInfo([string]$xioname,[string]$username,[string]$password,[string]$volname){
+Function Get-XtremVolume([string]$xioname,[string]$username,[string]$password,[string]$volname){
   
    <#
      .DESCRIPTION
@@ -146,10 +146,10 @@ Function Get-XtremVolumeInfo([string]$xioname,[string]$username,[string]$passwor
       Name of the volume you would like information for
 
       .EXAMPLE
-      Get-XtremVolumeInfo -volname testvol
+      Get-XtremVolume -volname testvol
 
       .EXAMPLE
-      Get-XtremVolumeInfo -xioname 10.4.45.24 -username admin -password Xtrem10 -volname testvol
+      Get-XtremVolume -xioname 10.4.45.24 -username admin -password Xtrem10 -volname testvol
 
   #>
    
@@ -634,7 +634,7 @@ Function Get-XtremVolumeFolders([string]$xioname,[string]$username,[string]$pass
 }
 
 #Returns details of an XtremIO Volume Folder. Defaults to root if foldername not entered 
-Function Get-XtremVolumeFolderInfo([string]$xioname,[string]$username,[string]$password,[string]$foldername){
+Function Get-XtremVolumeFolder([string]$xioname,[string]$username,[string]$password,[string]$foldername){
 
  <#
      .DESCRIPTION
@@ -653,13 +653,13 @@ Function Get-XtremVolumeFolderInfo([string]$xioname,[string]$username,[string]$p
       Full path of the folder you want info about - I.E. /folder1/snaps
 
       .EXAMPLE
-      Get-XtremVolumeFolderInfo
+      Get-XtremVolumeFolder
 
       .EXAMPLE
-      Get-XtremVolumeFolderInfo -foldername /folder1/volumes
+      Get-XtremVolumeFolder -foldername /folder1/volumes
 
       .EXAMPLE
-      Get-XtremVolumeFolderInfo -xioname 10.4.45.24 -username admin -password Xtrem10 -foldername /folder1/volumes
+      Get-XtremVolumeFolder -xioname 10.4.45.24 -username admin -password Xtrem10 -foldername /folder1/volumes
 
   #>
     
@@ -720,7 +720,7 @@ Function New-XtremVolumeFolder([string]$xioname,[string]$username,[string]$passw
       New-XtremVolumeFolder -foldername NewFolder -parentfolderpath /folder1/nested
 
       .EXAMPLE
-      Get-XtremVolumeFolderInfo -xioname 10.4.45.24 -username admin -password Xtrem10 -foldername /folder1/volumes
+      Get-XtremVolumeFolder -xioname 10.4.45.24 -username admin -password Xtrem10 -foldername /folder1/volumes
 
   #>
 
@@ -829,7 +829,7 @@ Function Get-XtremIGFolders([string]$xioname,[string]$username,[string]$password
 }
 
 #Returns details of an XtremIO Initiator Group Folder. Defaults to root if foldername not entered 
-Function Get-XtremIGFolderInfo([string]$xioname,[string]$username,[string]$password,[string]$foldername){
+Function Get-XtremIGFolder([string]$xioname,[string]$username,[string]$password,[string]$foldername){
 
  <#
      .DESCRIPTION
@@ -848,13 +848,13 @@ Function Get-XtremIGFolderInfo([string]$xioname,[string]$username,[string]$passw
       Full path of the folder you want info about - I.E. /folder1/snaps
 
       .EXAMPLE
-      Get-XtremIGFolderInfo
+      Get-XtremIGFolder
 
       .EXAMPLE
-      Get-XtremIGFolderInfo -foldername /folder1/volumes
+      Get-XtremIGFolder -foldername /folder1/volumes
 
       .EXAMPLE
-      Get-XtremIGFolderInfo -xioname 10.4.45.24 -username admin -password Xtrem10 -foldername /folder1/volumes
+      Get-XtremIGFolder -xioname 10.4.45.24 -username admin -password Xtrem10 -foldername /folder1/volumes
 
   #>
     
@@ -1021,7 +1021,7 @@ Function Get-XtremInitiators([string]$xioname,[string]$username,[string]$passwor
 }
 
 #Returns info for a specific XtremIO Initiator
-Function Get-XtremInitiatorInfo([string]$xioname,[string]$username,[string]$password,[string]$initiatorname){
+Function Get-XtremInitiator([string]$xioname,[string]$username,[string]$password,[string]$initiatorname){
 
   <#
      .DESCRIPTION
@@ -1040,10 +1040,10 @@ Function Get-XtremInitiatorInfo([string]$xioname,[string]$username,[string]$pass
       Name of a specific initiator
 
       .EXAMPLE
-      Get-XtremInitiatorInfo -initiatorname testinit1
+      Get-XtremInitiator -initiatorname testinit1
 
       .EXAMPLE
-      Get-XtremInitiatorInfo -xioname 10.4.45.24 -username admin -password Xtrem10 -initiatorname testinit1
+      Get-XtremInitiator -xioname 10.4.45.24 -username admin -password Xtrem10 -initiatorname testinit1
 
   #>
  
@@ -1272,7 +1272,7 @@ Function Get-XtremInitiatorGroups([string]$xioname,[string]$username,[string]$pa
 }
 
 #Returns info for a specific XtremIO initiator group
-Function Get-XtremInitiatorGroupInfo([string]$xioname,[string]$username,[string]$password,[string]$igname){
+Function Get-XtremInitiatorGroup([string]$xioname,[string]$username,[string]$password,[string]$igname){
 
    <#
      .DESCRIPTION
@@ -1291,10 +1291,10 @@ Function Get-XtremInitiatorGroupInfo([string]$xioname,[string]$username,[string]
       Name of a specific initiator group
 
       .EXAMPLE
-      Get-XtremInitiatorGroupInfo -igname testig
+      Get-XtremInitiatorGroup -igname testig
 
       .EXAMPLE
-      Get-XtremInitiatorGroupInfo -xioname 10.4.45.24 -username admin -password Xtrem10 -igname testig
+      Get-XtremInitiatorGroup -xioname 10.4.45.24 -username admin -password Xtrem10 -igname testig
 
   #>
 
@@ -1409,7 +1409,7 @@ Function Remove-XtremInitiatorGroup([string]$xioname,[string]$username,[string]$
 ######### VOLUME MAPPING COMMANDS #########
 
 #Returns list of volume mapping names
-Function Get-XtremVolumeMappingList([string]$xioname,[string]$username,[string]$password){
+Function Get-XtremVolumeMappings([string]$xioname,[string]$username,[string]$password){
 
    if($global:XtremUsername){
   $username = $global:XtremUsername
@@ -1436,7 +1436,7 @@ Function Get-XtremVolumeMappingList([string]$xioname,[string]$username,[string]$
 }
 
 #Returns Volumes mapped by Initiator group/hostname
-Function Get-XtremVolumeMappingInfo([string]$xioname,[string]$username,[string]$password,[string]$igname){
+Function Get-XtremVolumeMapping([string]$xioname,[string]$username,[string]$password,[string]$igname){
 
   <#
      .DESCRIPTION
@@ -1455,10 +1455,10 @@ Function Get-XtremVolumeMappingInfo([string]$xioname,[string]$username,[string]$
       Name of initiator group
 
       .EXAMPLE
-      Get-XtremVolumeMappingInfo -igname testig
+      Get-XtremVolumeMapping -igname testig
 
       .EXAMPLE
-      Get-XtremVolumeMappingInfo -xioname 10.4.45.24 -username admin -password Xtrem10 -igname testig
+      Get-XtremVolumeMapping -xioname 10.4.45.24 -username admin -password Xtrem10 -igname testig
 
   #>
   
@@ -1589,11 +1589,13 @@ Function New-XtremVolumeMapping([string]$xioname,[string]$username,[string]$pass
     }
 "@
     $uri = "https://$xioname/api/json/types/lun-maps/"
-    $request = Invoke-RestMethod -Uri $uri -Headers $header -Method Post -Body $body
+    $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Post -Body $body)
     Write-Host ""
     Write-Host -ForegroundColor Green "Volume ""$volname"" successfully mapped to initiator group ""$igname"""
-    return $true
-   }
+    
+    return (Invoke-RestMethod -Uri $data.links.href -Headers $header -Method Get).content
+    }
+
    catch{
        $error = (Get-XtremErrorMsg -errordata  $result) 
         Write-Error $error
@@ -1642,8 +1644,8 @@ Function Remove-XtremVolumeMapping([string]$xioname,[string]$username,[string]$p
     
   $result=
   try{
-    $volid = (Get-XtremVolumeInfo -xioname $xioname -volname $volname -username $username -password $password).index
-    $igid = (Get-XtremInitiatorGroupInfo -xioname $xioname -username $username -password $password -igname $igname).index
+    $volid = (Get-XtremVolume -xioname $xioname -volname $volname -username $username -password $password).index
+    $igid = (Get-XtremInitiatorGroup -xioname $xioname -username $username -password $password -igname $igname).index
     $tgid = "1"
     $mapname = "$volid"+"_"+"$igid"+"_"+"$tgid"
     $header = Get-XtremAuthHeader -username $username -password $password 
@@ -1942,27 +1944,27 @@ function Get-XtremHelp(){
   Write-Host -ForegroundColor Green "VOLUME, SNAPSHOT, AND MAPPING COMMANDS"
   Write-Host ""
   Get-Help Get-XtremVolumes
-  Get-Help Get-XtremVolumeInfo
+  Get-Help Get-XtremVolume
   Get-Help New-XtremVolume
   Get-Help Edit-XtremVolume
   Get-Help Remove-XtremVolume
   Get-Help Get-XtremSnapshots
   Get-Help New-XtremSnapshot
   Get-Help Remove-XtremSnapshot
-  Get-Help Get-XtremVolumeMappingInfo
+  Get-Help Get-XtremVolumeMapping
   Get-Help New-XtremVolumeMapping
   Get-Help Remove-XtremVolumeMapping
   Get-Help Get-XtremVolumeFolders
-  Get-Help Get-XtremVolumeFolderInfo
+  Get-Help Get-XtremVolumeFolder
   Get-Help New-XtremVolumeFolder
   Get-Help Get-XtremIGFolders
-  Get-Help Get-XtremIGFolderInfo
+  Get-Help Get-XtremIGFolder
   Get-Help New-XtremIGFolder
   Get-Help Get-XtremInitiators
-  Get-Help Get-XtremInitiatorInfo
+  Get-Help Get-XtremInitiator
   Get-Help New-XtremInitiator
   Get-Help Get-XtremInitiatorGroups
-  Get-Help Get-XtremInitiatorGroupInfo
+  Get-Help Get-XtremInitiatorGroup
   Get-Help New-XtremInitiatorGroup
   #Get-Help Edit-XtremInitiatorGroup
   Get-Help Remove-XtremInitiatorGroup
