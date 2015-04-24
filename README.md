@@ -2,27 +2,35 @@
   <content>
 # xtremlib
  
-xtremlib is a PowerShell Module that acts as a wrapper for interactions with the XtremIO RESTful API
-This release was written and tested against XIOS 2.4, but should also work without issue on 3.0+ as
-none of the RESTful calls leveraged were changed in 3.0. 
+xtremlib is a PowerShell Module that wraps interactions with the XtremIO RESTful API
+The current release (2.0) was written and tested against XIOS 3.x. If you are running 1.0, things have changed a bit.
+
+## xtremlib 2.0
+
+#### Changes from 1.0 
+- All Get commands now return the full object returned from XtremIO - you can do with it what you'd like.
+- Error handling has been improved 
+- Post/Delete commands (Removes and updates) continue to return $true if they successfully complete
+- It should no longer be necessary to import the XtremIO certificate (cert validation is bypassed)
+- Remove-XtremVolumeMapping is now significantly faster (due to 3.0 API updates in conjunction with modified cmdlet)
+- You can now store encrypted credentials in a .txt file (useful for scripting)
+- Some variable names have changed to be more consistent between functions
+- Some cmdlet names have changes to be more consistent with PowerShell nomenclature
+
+#### Upcoming changes 
+- Functions/switches that allow you to more easily manage complex snapshot workflows (IE tracking Golds, 1st gens, 2nd gens, promoting to Gold)
+- Allowing for object piping between cmdlets 
+
+#### Feedback
+- For feature request, please raise an issue
+- For bugs, please, raise an issue
 
 
  
 ## Installation
 
-#### Importing the XtremIO Security Certificate 
-Before you can begin using the module, you will need to import the XtremIO security certificate into your Trusted
-Root Certificate Authority. To do this, point your browser to either the IP Address or the hostname of your XtremIO
-cluster. Click the 'security certificate' link to download the certificate, and save it somewhere on the computer
-that will be executing the PS commands. Then, open up mmc, go to the 'Certificates - Current User' snap-in and navigate
-to the 'Trusted Root Certification Authorities' folder. Right click on it, navigate to 'All Tasks', then click 'Import'. 
-Go through the wizard and select the XtremIO certificate you saved earlier when prompted for a certificate file to import.
-
 #### Installing the Module
-Download entire contents as .zip Extract the xtremlib folder to a designated PowerShell module directory. If you do
-not know where your PowerShell module directories are, open up a PowerShell prompt and examine the PSModulePath variable
-by entering '$env:PSModulePath'. Once the folder has been placed in a module directory, module functions will be available
-in PowerShell. 
+Place all contents into your [PowerShell Module folder](https://msdn.microsoft.com/en-us/library/dd878350%28v=vs.85%29.aspx), or use [Import-Module](https://technet.microsoft.com/en-us/library/hh849725.aspx)
 
 
  
@@ -32,13 +40,53 @@ Most function switch input is case-sensitive, so assume that when entering names
 match. One-time credential setting is now possible using New-XtremSession. Credentials can also be specified for each command. 
 Here are some examples (the below use special formatting for output, you can use your own custom object formatting):
 
-![Alt text](http://i.imgur.com/cMSVfho.png "Example with stored credentials")
+First generate and store secure credentials:
+```
+New-XtremSecureCreds -path C:\temp
+```
+Then start an XtremIO session (this stores creds (encrypted pw) as global vars for the PowerShell session:
+```
+New-XtremSession -xioname 10.29.63.14 -credlocation C:\temp
+```
+Get Cluster Statistics
+```
+Get-XtremClusterStatus
+```
+Create a Volume
+```
+New-XtremVolume -volname navi -volsize 1048g
+```
+Create an Initiator Group
+```
+New-XtremInitiatorGroup -igname naviig
+```
+Map a Volume to an Initiator Group
+```
+New-XtremVolumeMapping -volname navi -igname naviig
+```
+Create a snapshot of a volume
+```
+New-XtremSnapshot -volname navi -snapname navisnap
+```
+Map the snapshot to and Initiator Group
+```
+New-XtremVolumeMapping -volname navisnap -igname naviig
+```
+Unmap the volume from an Initiator Group
+```
+Remove-XtremVolumeMapping -volname navi -igname naviig
+```
+Delete a volume or snapshot 
+```
+Remove-XtremVolume -volname navi
+```
+Delete an Initiator Group
+```
+Remove-XtremInitiatorGroup -igname naviig
+```
+And many more!
 
-![Alt text](http://i.imgur.com/jl2JGpS.png "Example Commands")
-
-![Alt text](http://i.imgur.com/bckO9Wz.png "More examples")
-
-## Command List
+## Full Command List
 In PowerShell, run Get-XtremHelp to list all of the available commands. Get-Help is also available for each command. 
 
 ##Licensing
