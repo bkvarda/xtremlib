@@ -36,7 +36,7 @@ $global:XtremName =$null
 
 
 #Returns Various XtremIO Statistics
-Function Get-XtremClusterStatus ([string]$xioname,[string]$username,[string]$password)
+Function Get-XtremClusterStatus
 { 
   <#
      .DESCRIPTION
@@ -58,6 +58,19 @@ Function Get-XtremClusterStatus ([string]$xioname,[string]$username,[string]$pas
       Get-XtremclusterStatus -xioname 10.4.45.24 -username admin -password Xtrem10
 
   #>
+
+  [cmdletbinding()]
+Param (
+    [parameter()]
+    [string]$xioname,
+
+    [parameter()]
+    [string]$username,
+
+    [parameter()]
+    [string]$password
+
+  )
 
   if($global:XtremUsername){
   $username = $global:XtremUsername
@@ -94,7 +107,7 @@ Function Get-XtremEvents([string]$xioname,[string]$username,[string]$password){
 ######### VOLUME AND SNAPSHOT COMMANDS #########
 
 #Returns List of Volumes
-Function Get-XtremVolumes([string]$xioname,[string]$username,[string]$password){
+Function Get-XtremVolumes{
 
   <#
      .DESCRIPTION
@@ -116,6 +129,21 @@ Function Get-XtremVolumes([string]$xioname,[string]$username,[string]$password){
       Get-XtremVolumes -xioname 10.4.45.24 -username admin -password Xtrem10
 
   #>
+
+  [cmdletbinding()]
+Param (
+    [parameter()]
+    [string]$xioname,
+
+    [parameter()]
+    [string]$username,
+
+    [parameter()]
+    [string]$password
+
+  )
+
+
 
   if($global:XtremUsername){
   $username = $global:XtremUsername
@@ -141,7 +169,7 @@ Function Get-XtremVolumes([string]$xioname,[string]$username,[string]$password){
 }
 
 #Returns Statistics for a Specific Volume or Snapshot
-Function Get-XtremVolume([string]$xioname,[string]$username,[string]$password,[string]$volname){
+Function Get-XtremVolume{
   
    <#
      .DESCRIPTION
@@ -166,6 +194,22 @@ Function Get-XtremVolume([string]$xioname,[string]$username,[string]$password,[s
       Get-XtremVolume -xioname 10.4.45.24 -username admin -password Xtrem10 -volname testvol
 
   #>
+
+  [cmdletbinding()]
+Param (
+    [parameter()]
+    [string]$xioname,
+
+    [parameter()]
+    [string]$username,
+
+    [parameter()]
+    [string]$password,
+
+    [parameter(Mandatory=$true)]
+    [string]$volname
+
+  )
    
    if($global:XtremUsername){
   $username = $global:XtremUsername
@@ -1423,9 +1467,24 @@ Function Remove-XtremInitiatorGroup([string]$xioname,[string]$username,[string]$
 ######### VOLUME MAPPING COMMANDS #########
 
 #Returns list of volume mapping names
-Function Get-XtremVolumeMappings([string]$xioname,[string]$username,[string]$password){
+Function Get-XtremVolumeMappings{
+[CmdletBinding()]
 
-   if($global:XtremUsername){
+Param(
+[Parameter()]
+[string]$xioname,
+[Parameter()]
+[string]$username,
+[Parameter()]
+[string]$password,
+[Parameter()]
+[ValidateSet('Volume','InitatorGroup')]
+[string]$indextype,
+[Parameter()]
+[string]$name
+)
+
+  if($global:XtremUsername){
   $username = $global:XtremUsername
   $xioname = $global:XtremName
   $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
@@ -1437,15 +1496,25 @@ Function Get-XtremVolumeMappings([string]$xioname,[string]$username,[string]$pas
   try{  
     $header = Get-XtremAuthHeader -username $username -password $password 
     $uri = "https://$xioname/api/json/types/lun-maps"
-    $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get)
+   
+    Invoke-RestMethod -Uri $uri -Headers $header -Method GET
+    
 
-    return $data.'lun-maps'
+    ###If given volumename, find its initiator groups
+    $volid = (Get-XtremVolume -xioname $xioname -volname $volname -username $username -password $password).index
+    $igid = (Get-XtremInitiatorGroup -xioname $xioname -username $username -password $password -igname $igname).index
+    $tgid = "1"
+    $mapname = "$volid"+"_"+"$igid"+"_"+"$tgid"
+     
+    $uri = "https://$xioname/api/json/types/lun-maps/?name=$mapname"
+    
    }
    catch{
-   $error = (Get-XtremErrorMsg -errordata  $result) 
-   Write-Error $error
+   #$error = (Get-XtremErrorMsg -errordata  $result) 
+   #Write-Error $error
    
    }
+ $result
 
 }
 
@@ -1557,7 +1626,7 @@ Function Get-XtremVolumeMapID([string]$xioname,[string]$username,[string]$passwo
 }
 
 #Maps volume to initiator group
-Function New-XtremVolumeMapping([string]$xioname,[string]$username,[string]$password,[string]$volname,[string]$igname){
+Function New-XtremVolumeMapping([string]$xioname,[string]$username,[string]$password,[string]$volname,[string]$igname,[string]$lunid){
 
   <#
      .DESCRIPTION
@@ -1578,6 +1647,9 @@ Function New-XtremVolumeMapping([string]$xioname,[string]$username,[string]$pass
       .PARAMETER $volname
       Name of volume you would like to map
 
+      .PARAMETER $lunid
+      LUN # you want the volume mapped to have on the host
+
       .EXAMPLE
       New-XtremVolumeMapping -volname testvol -igname testig
 
@@ -1596,12 +1668,24 @@ Function New-XtremVolumeMapping([string]$xioname,[string]$username,[string]$pass
 
   $result=try{
     $header = Get-XtremAuthHeader -username $username -password $password
+  if($lunid){
+  $body = @"
+    {
+    "vol-id":"$volname",
+    "ig-id":"$igname",
+    "lun":"$lunid"
+    }
+"@
+
+  }
+  else{
     $body = @"
     {
     "vol-id":"$volname",
     "ig-id":"$igname"
     }
 "@
+  }
     $uri = "https://$xioname/api/json/types/lun-maps/"
     $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Post -Body $body)
     Write-Host ""
