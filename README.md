@@ -3,9 +3,9 @@
 # xtremlib
  
 xtremlib is a PowerShell Module that wraps interactions with the XtremIO RESTful API
-The latest release (3.0) was written and tested against XIOS 3.x. If you are running 1.0, things have changed a bit.
+The latest release (3.0) was written and tested against XIOS 3.x and can be found [here](https://github.com/bkvarda/xtremlib/releases/tag/3.0).
 
-## xtremlib 4.0
+## xtremlib 4.0 (in development)
 No current release. Source will be updated in the 4.0 branch [here]()
 
 #### Upcoming changes 
@@ -16,7 +16,7 @@ No current release. Source will be updated in the 4.0 branch [here]()
 - Ability to run against XMS managing more than one system
 - And more!
 
-## xtremlib 3.0
+## xtremlib 3.0 (current)
 Latest release available [here](https://github.com/bkvarda/xtremlib/releases/tag/3.0). Source is available in the 3.0 branch [here]()
 
 #### Changes from 1.0 
