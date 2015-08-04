@@ -3,9 +3,21 @@
 # xtremlib
  
 xtremlib is a PowerShell Module that wraps interactions with the XtremIO RESTful API
-The current release (2.0) was written and tested against XIOS 3.x. If you are running 1.0, things have changed a bit.
+The latest release (3.0) was written and tested against XIOS 3.x. If you are running 1.0, things have changed a bit.
 
-## xtremlib 2.0
+## xtremlib 4.0
+No current release. Source will be updated in the 4.0 branch [here]()
+
+#### Upcoming changes 
+- Functions/switches that allow you to more easily manage complex snapshot workflows
+- Allowing for object piping between cmdlets 
+- Implementation of v2 API filters (faster performance)
+- Implementation of performance-related commands
+- Ability to run against XMS managing more than one system
+- And more!
+
+## xtremlib 3.0
+Latest release available [here](https://github.com/bkvarda/xtremlib/releases/tag/3.0). Source is available in the 3.0 branch [here]()
 
 #### Changes from 1.0 
 - All Get commands now return the full object returned from XtremIO - you can do with it what you'd like.
@@ -17,9 +29,6 @@ The current release (2.0) was written and tested against XIOS 3.x. If you are ru
 - Some variable names have changed to be more consistent between functions
 - Some cmdlet names have changes to be more consistent with PowerShell nomenclature
 
-#### Upcoming changes 
-- Functions/switches that allow you to more easily manage complex snapshot workflows (IE tracking Golds, 1st gens, 2nd gens, promoting to Gold)
-- Allowing for object piping between cmdlets 
 
 #### Feedback
 - For feature request, please raise an issue
