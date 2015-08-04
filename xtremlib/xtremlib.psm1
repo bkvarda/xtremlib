@@ -3,9 +3,7 @@ xtremlib is a PowerShell Module that acts as a wrapper for interactions with the
 This is currently incomplete, I intend to include most API functionality as well as make content more presentable
 
 #TODO
- -Lots
- -Implement token-based security
- -Implement all basic storage creation/setting commands
+
 
 Written by : Brandon Kvarda
              @bjkvarda
@@ -1476,12 +1474,7 @@ Param(
 [Parameter()]
 [string]$username,
 [Parameter()]
-[string]$password,
-[Parameter()]
-[ValidateSet('Volume','InitatorGroup')]
-[string]$indextype,
-[Parameter()]
-[string]$name
+[string]$password
 )
 
   if($global:XtremUsername){
@@ -1497,24 +1490,34 @@ Param(
     $header = Get-XtremAuthHeader -username $username -password $password 
     $uri = "https://$xioname/api/json/types/lun-maps"
    
-    Invoke-RestMethod -Uri $uri -Headers $header -Method GET
+    $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method GET).'lun-maps'
+    $list = @()
     
+    Write-Host "Collecting data for all volumes, this may take some time depending on the number of volumes..."
 
-    ###If given volumename, find its initiator groups
-    $volid = (Get-XtremVolume -xioname $xioname -volname $volname -username $username -password $password).index
-    $igid = (Get-XtremInitiatorGroup -xioname $xioname -username $username -password $password -igname $igname).index
-    $tgid = "1"
-    $mapname = "$volid"+"_"+"$igid"+"_"+"$tgid"
+    ForEach ($mapping in $data){
+     $mapname = $mapping.name
      
-    $uri = "https://$xioname/api/json/types/lun-maps/?name=$mapname"
+     $uri = "https://$xioname/api/json/types/lun-maps/?name=$mapname"
+
+     $mapdata = (Invoke-RestMethod -Uri $uri -Headers $header -Method GET).content
+     
+     $mapobject = New-Object System.Object
+     
+     $mapobject | Add-Member -type NoteProperty -name 'Volume Name' -Value $mapdata.'vol-name'
+     $mapobject | Add-Member -type NoteProperty -name 'Host (IG)' -Value $mapdata.'ig-name'
+     $list += $mapobject
+    } 
+    $list
+    
     
    }
    catch{
-   #$error = (Get-XtremErrorMsg -errordata  $result) 
-   #Write-Error $error
+   $error = (Get-XtremErrorMsg -errordata  $result) 
+   Write-Error $error
    
    }
- $result
+ $result |Sort-Object 'Host (IG)' | Format-Table -AutoSize
 
 }
 
