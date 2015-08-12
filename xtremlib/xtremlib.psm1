@@ -29,6 +29,7 @@ add-type @"
 $global:XtremUsername =$null
 $global:XtremPassword =$null
 $global:XtremName =$null
+$global:XtremClusterName = $null
 
 ######### SYSTEM COMMANDS ##########
 
@@ -129,40 +130,22 @@ Function Get-XtremVolumes{
   #>
 
   [cmdletbinding()]
-Param (
+Param(
     [parameter()]
-    [string]$xioname,
-
+    [string]$XmsName,
     [parameter()]
-    [string]$username,
-
+    [String]$XtremioName,
     [parameter()]
-    [string]$password
-
+    [string]$Username,
+    [parameter()]
+    [string]$Password
   )
 
+    $Route = '/types/volumes'
+    $QueryString = '?cluser-name='+$XtremioName
+    $ObjectSelection = 'volumes'
 
-
-  if($global:XtremUsername){
-  $username = $global:XtremUsername
-  $xioname = $global:XtremName
-  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
-  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
-  }
-  
-  $result=
-  try{  
-    $header = Get-XtremAuthHeader -username $username -password $password
-    $uri = "https://$xioname/api/json/types/volumes"
-    $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get).volumes
-
-    return $data
-   }
-   catch{
-   $error = (Get-XtremErrorMsg -errordata  $result) 
-   Write-Error $error
-   
-   }
+    New-XtremRequest -Method GET -Endpoint $Route -XmsName $XmsName -XtremioName $XtremioName -QueryString $QueryString -Username $Username -Password $Password -ObjectSelection $ObjectSelection
 
 }
 
@@ -1796,6 +1779,81 @@ Function Get-XtremClusterName ([string]$xioname,[object]$header){
  
 }
 
+#Builds the REST request
+Function New-XtremRequest {
+[cmdletbinding()]
+Param(
+[Parameter(Mandatory=$true)]
+[ValidateSet('GET','PUT','POST','DELETE')]
+[String]$Method,
+[Parameter(Mandatory=$true)]
+[String]$Endpoint,
+[Parameter()]
+[String]$XmsName,
+[Parameter()]
+[String]$XtremioName,
+[Parameter()]
+[Array]$Body,
+[Parameter()]
+[String]$QueryString = '',
+[Parameter()]
+[String]$Username,
+[Parameter()]
+[String]$Password,
+[Parameter()]
+[String]$ObjectSelection = ''
+)
+
+  ##Set up variables
+  #If there is a global Username set, use the globals
+
+  if($global:XtremUsername){
+  $Username = $global:XtremUsername
+  $XmsName = $global:XtremName
+  $XtremioName = $global:XtremClusterName
+  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
+  $Password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+  }
+
+$result = try{    
+                  ##Construct Auth Header and full URI
+                  $BaseUri = "https://$XmsName/api/json/v2"
+                  $Header = Get-XtremAuthHeader -username $username -password $password
+                  $Uri = $BaseUri + $Endpoint + $QueryString 
+
+                  ##Do this for GET Requests
+                  if($Method -eq 'GET'){
+
+                    (Invoke-RestMethod -Method $Method -Uri $Uri -Headers $Header).$ObjectSelection
+       
+                  }
+
+                  ##Do this for PUT and POST Requests
+                  if($Method -eq 'POST' -or $Method -eq 'PUT'){
+
+                    (Invoke-RestMethod -Method $Method -Uri $Uri -Body $Body -Headers $Header).$ObjectSelection
+
+                  }
+
+                  ##Do this for DELETE Requests
+                  if($Method -eq 'DELETE'){
+
+                    Invoke-RestMethod -Method $Method -Uri $Uri -Headers $Header
+
+
+                  }
+            }
+            catch{
+
+              Get-XtremErrorMsg -errordata $result
+
+
+            }
+
+  $result 
+
+}
+
 
 
 
@@ -1824,7 +1882,7 @@ Function Get-XtremErrorMsg([AllowNull()][object]$errordata){
 }
 
 #Defines global username, password, and hostname/ip for PS session 
-function New-XtremSession([string]$xioname,[string]$username,[string]$password,[string]$credlocation) {
+function New-XtremSession([string]$XtremioName,[string]$XmsName, [string]$Username, [string]$Password, [string]$CredLocation) {
 
    <#
      .DESCRIPTION
@@ -1833,36 +1891,40 @@ function New-XtremSession([string]$xioname,[string]$username,[string]$password,[
       When automating, it is best to run with switches at the beginning of scripts - I.E New-XtremSession -xioname name -username name -password pw.
       This will not prompt, and you can run other functions further down your script without explicitly sending credential arguments.
 
-      .PARAMETER $xioname
+      .PARAMETER $XmsName
       IP Address or hostname for XtremIO XMS. Optional if interactive prompts
 
-      .PARAMETER $username
+      .PARAMETER $XtremioName
+      Name of the XtremIO you are sending the command to. This is new in 4.0 as XMS can manage multiple systems
+
+      .PARAMETER $Username
       Username for XtremIO XMS. Optional if interactive prompts
 
-      .PARAMETER $password
+      .PARAMETER $Password
       Password for XtremIO XMS. Optional if interactive prompts
       
-      .PARAMETER $credlocation
+      .PARAMETER $CredLocation
       Specifies the location of stored credentials made using the New-XtremSecureCreds function. 
 
       .EXAMPLE
       New-XtremSession
 
       .EXAMPLE
-      New-XtremSession -xioname 10.4.45.24 -username admin -password Xtrem10
+      New-XtremSession -XmsName 10.4.45.24 -XtremioName cluster01 -Username admin -Password Xtrem10
 
       .EXAMPLE
-      New-XtremSession -xioname 10.4.45.24 -credlocation C:\temp
+      New-XtremSession -XmsName 10.4.45.24 -XtremioName cluster01 -credlocation C:\temp
 
   #>
 
-    if($xioname){
+    if($XmsName){
       #secure creds have already been defined
-      if($credlocation)
+      if($CredLocation)
       { 
         $pwdlocation = $credlocation + "\xiopwd.txt"
         $userlocation = $credlocation + "\xiouser.txt"
-        $global:XtremName = $xioname
+        $global:XtremName = $XmsName
+        $global:XtremClusterName = $XtremioName
         $global:XtremUsername = Get-Content $userlocation
         $global:XtremPassword = Get-Content $pwdlocation | ConvertTo-SecureString 
 
@@ -1872,8 +1934,9 @@ function New-XtremSession([string]$xioname,[string]$username,[string]$password,[
     
       #plain text creds have been defined as part of the command
       else{
-        $global:XtremName = $xioname
-        $global:XtremUsername = $username
+        $global:XtremName = $XmsName
+        $global:XtremUsername = $Username
+        $global:XtremClusterName = $XtremioName
         $securepassword = ConvertTo-SecureString $password -AsPlainText -Force
         $global:XtremPassword =$securepassword
         
@@ -1887,6 +1950,7 @@ function New-XtremSession([string]$xioname,[string]$username,[string]$password,[
     #else it's an interactive session
     else{
     $global:XtremName = Read-Host -Prompt "Enter XtremIO XMS Hostname or IP Address"
+    $global:XtremClusterName = Read-Host -Prompt "Enter XtremIO Cluster name"
     $global:XtremUsername = Read-Host -Prompt "Enter XtremIO username"
     $global:XtremPassword = Read-Host -Prompt "Enter password" -AsSecureString
     }    
@@ -2017,6 +2081,7 @@ function Remove-XtremSession(){
   $global:XtremUsername =$null
   $global:XtremPassword =$null
   $global:XtremName =$null
+  $global:XmsName = $null
 
 
 }
