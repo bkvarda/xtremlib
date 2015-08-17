@@ -61,39 +61,23 @@ Function Get-XtremClusterStatus
   [cmdletbinding()]
 Param (
     [parameter()]
-    [string]$xioname,
-
+    [string]$XmsName,
+    [parameter(Mandatory=$true)]
+    [string]$XtremioName,
     [parameter()]
-    [string]$username,
-
-    [parameter()]
-    [string]$password
+    [string]$Username,
+    [Parameter()]
+    [String]$Password,
+    [Parameter()]
+    [String[]]$Properties
 
   )
+  
+  $Route = '/types/clusters/'
+  $GetProperty = 'name='+$XtremioName
+  $ObjectSelection = 'content'
 
-  if($global:XtremUsername){
-  $username = $global:XtremUsername
-  $xioname = $global:XtremName
-  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
-  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
-  }
-
- $result=
-  try{
-    $header = Get-XtremAuthHeader -username $username -password $password
-    $formattedname = Get-XtremClusterName -xioname $xioname -header $header
-    $uri = "https://$xioname/api/json/types/clusters/?name=$formattedname"
-    $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get).content
-
-    
-
-    return $data
-   }
-   catch{
-   $error = (Get-XtremErrorMsg -errordata  $result) 
-   Write-Error $error
-   
-   }          
+  New-XtremRequest -Method GET -Endpoint $Route -XmsName $XmsName -Username $Username -Password $Password -ObjectSelection $ObjectSelection -GetProperty $GetProperty -Properties $Properties   
 
 }
 
@@ -134,18 +118,20 @@ Param(
     [parameter()]
     [string]$XmsName,
     [parameter()]
-    [String]$XtremioName,
+    [String]$XtremioName = $global:XtremClusterName,
     [parameter()]
     [string]$Username,
     [parameter()]
-    [string]$Password
+    [string]$Password,
+    [parameter()]
+    [string[]]$Properties
   )
-
+    
     $Route = '/types/volumes'
-    $QueryString = '?cluser-name='+$XtremioName
+ 
     $ObjectSelection = 'volumes'
 
-    New-XtremRequest -Method GET -Endpoint $Route -XmsName $XmsName -XtremioName $XtremioName -QueryString $QueryString -Username $Username -Password $Password -ObjectSelection $ObjectSelection
+    New-XtremRequest -Method GET -Endpoint $Route -XmsName $XmsName -XtremioName $XtremioName -Properties $Properties -Username $Username -Password $Password -ObjectSelection $ObjectSelection
 
 }
 
@@ -179,46 +165,29 @@ Function Get-XtremVolume{
   [cmdletbinding()]
 Param (
     [parameter()]
-    [string]$xioname,
-
+    [string]$XmsName,
     [parameter()]
-    [string]$username,
-
+    [string]$XtremioName,
     [parameter()]
-    [string]$password,
-
+    [string]$Username,
     [parameter(Mandatory=$true)]
-    [string]$volname
-
+    [string]$VolumeName,
+    [parameter()]
+    [string]$Password,
+    [Parameter()]
+    [string[]]$Properties
   )
    
-   if($global:XtremUsername){
-  $username = $global:XtremUsername
-  $xioname = $global:XtremName
-  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
-  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
-  }
-   
-    
-  $result=
-  try{  
-    $header = Get-XtremAuthHeader -username $username -password $password 
-    $uri = "https://$xioname/api/json/types/volumes/?name=$volname"
-    $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get).content
-   
-    return $data
-  
-   }
-   catch{
-   $error = (Get-XtremErrorMsg -errordata  $result) 
-   Write-Error $error
-   
-   }  
+  $Route = '/types/volumes/'
+  $GetProperty = 'name='+$VolumeName
+  $ObjectSelection = 'content'
+
+  New-XtremRequest -Method GET -Endpoint $Route -XmsName $XmsName -Username $Username -Password $Password -ObjectSelection $ObjectSelection -GetProperty $GetProperty -Properties $Properties
     
 }
 
 #Creates a Volume. If no folder specified, defaults to root. 
-Function New-XtremVolume([string]$xioname,[string]$username,[string]$password,[string]$volname,[string]$volsize,[string]$folder){
+Function New-XtremVolume{
 
  <#
      .DESCRIPTION
@@ -249,48 +218,39 @@ Function New-XtremVolume([string]$xioname,[string]$username,[string]$password,[s
       New-XtremVolume -xioname 10.4.45.24 -username admin -password Xtrem10 -volname testvol -volsize 1048m
 
   #>
+[CmdletBinding()]
 
- 
- 
- if($global:XtremUsername){
-  $username = $global:XtremUsername
-  $xioname = $global:XtremName
-  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
-  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
-  }
+Param(
+[Parameter()]
+[String]$XmsName,
+[Parameter()]
+[String]$XtremioName,
+[Parameter()]
+[String]$Username,
+[Parameter()]
+[String]$Password,
+[Parameter(Mandatory=$true)]
+[String]$VolumeName,
+[Parameter(Mandatory=$true)]
+[String]$VolumeSize
+)
 
-  if(!$folder){
- $folder = "/"
- }
- 
- $result=
-  try{
-   $header = Get-XtremAuthHeader -username $username -password $password 
-   $body = @"
+   $Route = '/types/volumes'
+   $Body = @"
    {
-      "vol-name":"$volname",
-      "vol-size":"$volsize",
-      "parent-folder-id":"$folder"
+      "vol-name":"$VolumeName",
+      "vol-size":"$VolumeSize"
    }
 "@
-   $uri = "https://$xioname/api/json/types/volumes/"
-   $data = Invoke-RestMethod -Uri $uri -Headers $header -Method Post -Body $body
-   Write-Host ""
-   Write-Host -ForegroundColor Green "Successfully create volume ""$volname"" with $volsize of capacity"
-   $href = $data.links.href
-   return (Invoke-RestMethod -Uri $href -Headers $header -Method Get).content 
-   
-  }
-  catch{
-   $error = (Get-XtremErrorMsg -errordata  $result) 
-   Write-Error $error
-   
-  }
+   $ObjectSelection = 'content'
+
+  New-XtremRequest -Method POST -Endpoint $Route -XmsName $XmsName -XtremioName $XtremioName -Body $Body -Username $Username -Password $Password -ObjectSelection $ObjectSelection
+  
 
 }
 
 #Modify a Volume 
-Function Edit-XtremVolume([string]$xioname,[string]$username,[string]$password,[string]$volname,[string]$volsize){
+Function Edit-XtremVolume{
 
    <#
      .DESCRIPTION
@@ -322,34 +282,43 @@ Function Edit-XtremVolume([string]$xioname,[string]$username,[string]$password,[
 
   #>
   
-  if($global:XtremUsername){
-  $username = $global:XtremUsername
-  $xioname = $global:XtremName
-  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
-  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
-  }
-  
-  $result=
-  try{
-   $header = Get-XtremAuthHeader -username $username -password $password 
-   $body = @"
+  [CmdletBinding()]
+
+Param(
+[Parameter()]
+[String]$XmsName,
+[Parameter()]
+[String]$XtremioName = $global:XtremClusterName,
+[Parameter()]
+[String]$Username,
+[Parameter()]
+[String]$Password,
+[Parameter(Mandatory=$true)]
+[String]$VolumeName,
+[Parameter(Mandatory=$true)]
+[ValidateSet('vol-size','vol-name','small-io-alerts','unaligned-io-alerts','vaai-tp-alerts')]
+[String]$ParameterToModify,
+[Parameter(Mandatory=$true)]
+[String]$NewValue
+)
+
+   
+   
+
+   $Route = '/types/volumes'
+   $GetProperty = 'name='+$VolumeName
+
+
+   $Body = @"
    {
-      "vol-name":"$volname",
-      "vol-size":"$volsize"
+      
+      "cluster-id":"$XtremioName",
+      "$ParameterToModify":"$NewValue"
    }
 "@
-   $uri = "https://$xioname/api/json/types/volumes/?name=$volname"
-   $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Put -Body $body)
-   Write-Host ""
-   Write-Host -ForegroundColor Green "Successfully modified volume ""$volname"" to have $volsize of capacity" 
-   
-   return (Invoke-RestMethod -Uri $uri -Headers $header -Method Get).content
-  }
-  catch{
-   $error = (Get-XtremErrorMsg -errordata  $result) 
-   Write-Error $error
-   
-  }
+   $ObjectSelection = 'content'
+
+  New-XtremRequest -Method PUT -Endpoint $Route -XmsName $XmsName -XtremioName $XtremioName -Body $Body -Username $Username -Password $Password -ObjectSelection $ObjectSelection -GetProperty $GetProperty 
 
 
 }
@@ -1765,17 +1734,24 @@ Function Get-XtremAuthHeader([string]$username,[string]$password){
 }
 
 #Returns XtremIO Cluster Name
-Function Get-XtremClusterName ([string]$xioname,[object]$header){
+Function Get-XtremClusterNames{
+[CmdletBinding()]
+Param(
+[Parameter()]
+[String]$XmsName,
+[Parameter()]
+[String]$Username,
+[Parameter()]
+[String]$Password,
+[Parameter()]
+[String[]]$Properties
+)
 
-  if($global:XtremUsername){
-  $username = $global:XtremUsername
-  $xioname = $global:XtremName
-  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
-  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
-  }
+  $Route = '/types/clusters'
+  $ObjectSelection = 'clusters'
+
+  New-XtremRequest -Method GET -Endpoint $Route -XmsName $XmsName -Username $Username -Password $Password -ObjectSelection $ObjectSelection -Properties $Properties
   
-  $clustername = (Invoke-RestMethod -Uri https://$xioname/api/json/types/clusters -Headers $header -Method Get).clusters.name
-  return $clustername 
  
 }
 
@@ -1795,13 +1771,15 @@ Param(
 [Parameter()]
 [Array]$Body,
 [Parameter()]
-[String]$QueryString = '',
+[String[]]$Properties = $null,
 [Parameter()]
 [String]$Username,
 [Parameter()]
 [String]$Password,
 [Parameter()]
-[String]$ObjectSelection = ''
+[String]$ObjectSelection = '',
+[Parameter()]
+[String]$GetProperty = $null
 )
 
   ##Set up variables
@@ -1819,19 +1797,129 @@ $result = try{
                   ##Construct Auth Header and full URI
                   $BaseUri = "https://$XmsName/api/json/v2"
                   $Header = Get-XtremAuthHeader -username $username -password $password
-                  $Uri = $BaseUri + $Endpoint + $QueryString 
+                  
+                  $PropertyString = ''
+                  $ClusterString = '' 
 
+                  
+
+                        #If properties were specified, builds a string for querying those
+                       if($Properties){
+                        Foreach($Property in $Properties){
+                          if($Property -eq $Properties[($Properties.Length -1)]){
+                       
+                            $PropertyString += 'prop=' + $Property 
+
+                          }
+                          else{
+                           $PropertyString += 'prop='+ $Property + '&'
+                          }
+                    
+                        }
+                       }
+                       else{
+                         $PropertyString = $null
+                       }
+                      #If a cluster name was specified, builds a string for that
+                      if($XtremioName -and ($Method -eq 'GET' -or $Method -eq 'DELETE')){
+
+                       
+
+                          $ClusterString = 'cluster-name='+$XtremioName
+
+                        
+                      }
+                      else{
+
+                        $ClusterString = $null 
+                      }
+
+                  
+                  if($PropertyString){
+
+                    $PropertyString = 'full=1&'+$PropertyString
+
+                  }
+
+           
+                  #We now have a property string <if there are properties> and cluster name <if specified>, and a GET property <if specified> we need to build a full URI
+                  
+                  if($GetProperty -and $ClusterString -and $PropertyString){
+                   
+                    $Uri = $BaseUri + $Endpoint +'?'+$GetProperty+'&'+$ClusterString+'&'+$PropertyString 
+                  }
+                  elseif($GetProperty -and $ClusterString -and !$PropertyString){
+                    
+                    $Uri = $BaseUri + $Endpoint + '?'+$GetProperty+'&'+$ClusterString
+                  }
+                  elseif($GetProperty -and $PropertyString -and !$ClusterString){
+
+                    $Uri = $BaseUri + $Endpoint + '?'+ $GetProperty + '&' + $PropertyString
+
+                  }
+                  elseif($GetProperty -and !$PropertyString -and !$ClusterString){
+
+                    $Uri = $BaseUri + $Endpoint + '?' + $GetProperty
+
+                  }
+                  elseif(!$GetProperty -and $PropertyString -and $ClusterString){
+
+                    $Uri = $BaseUri + $Endpoint + '?' + $ClusterString + '&' + $PropertyString
+
+                  }
+                  elseif(!$GetProperty -and !$PropertyString -and $ClusterString){
+
+                    $Uri = $BaseUri + $Endpoint + '?' + $ClusterString
+
+                  }
+                  elseif(!$GetProperty -and $PropertyString -and !$ClusterString){
+
+                    $Uri = $BaseUri + $Endpoint + '?' + $PropertyString 
+
+                  }
+                  else{
+                    
+                    $Uri = $BaseUri + $Endpoint 
+
+                  }
+
+
+                   Write-Host $Uri 
+                  
+                 
+                  
                   ##Do this for GET Requests
                   if($Method -eq 'GET'){
-
+                    
                     (Invoke-RestMethod -Method $Method -Uri $Uri -Headers $Header).$ObjectSelection
        
                   }
 
-                  ##Do this for PUT and POST Requests
-                  if($Method -eq 'POST' -or $Method -eq 'PUT'){
+                  ##Do this for POST Requests
+                  if($Method -eq 'POST'){
 
-                    (Invoke-RestMethod -Method $Method -Uri $Uri -Body $Body -Headers $Header).$ObjectSelection
+                    $data = (Invoke-RestMethod -Method $Method -Uri $Uri -Body $Body -Headers $Header)
+
+                    $href = $data.links.href
+
+
+                    (Invoke-RestMethod -Method GET -Uri $href -Headers $Header).$ObjectSelection
+
+                  }
+
+                  ##Do this for PUT Requests
+                  if($Method -eq 'PUT'){
+
+                    $req = (Invoke-WebRequest -Method $Method -Uri $Uri -Headers $Header -Body $Body)
+
+                    if($req.StatusCode -eq 200){
+
+                      Write-Host -ForegroundColor Green "Request Successful"
+                      $true
+
+                    }
+
+                    
 
                   }
 
