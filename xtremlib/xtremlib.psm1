@@ -35,7 +35,7 @@ $global:XtremClusterName = $null
 
 
 #Returns Various XtremIO Statistics
-Function Get-XtremClusterStatus
+Function Get-XtremClusterStatistics
 { 
   <#
      .DESCRIPTION
@@ -229,7 +229,8 @@ Param(
 [String]$Username,
 [Parameter()]
 [String]$Password,
-[Parameter(Mandatory=$true)]
+[Parameter(Mandatory=$true,ValueFromPipelineByPropertyName=$true)]
+[Alias('name')]
 [String]$VolumeName,
 [Parameter(Mandatory=$true)]
 [String]$VolumeSize
@@ -293,7 +294,8 @@ Param(
 [String]$Username,
 [Parameter()]
 [String]$Password,
-[Parameter(Mandatory=$true)]
+[Parameter(Mandatory=$true,ValueFromPipelineByPropertyName=$true)]
+[Alias('name')]
 [String]$VolumeName,
 [Parameter(Mandatory=$true)]
 [ValidateSet('vol-size','vol-name','small-io-alerts','unaligned-io-alerts','vaai-tp-alerts')]
@@ -324,7 +326,7 @@ Param(
 }
 
 #Deletes a Volume
-Function Remove-XtremVolume([string]$xioname,[string]$username,[string]$password,[string]$volname){
+Function Remove-XtremVolume{
 
   <#
      .DESCRIPTION
@@ -349,34 +351,36 @@ Function Remove-XtremVolume([string]$xioname,[string]$username,[string]$password
       Remove-XtremVolume -xioname 10.4.45.24 -username admin -password Xtrem10 -volname testvol
 
   #>
- 
- if($global:XtremUsername){
-  $username = $global:XtremUsername
-  $xioname = $global:XtremName
-  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
-  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
-  }
- 
- $result = try{
-  $header = Get-XtremAuthHeader -username $username -password $password
-  $uri = "https://$xioname/api/json/types/volumes/?name="+$volname
-  $data = Invoke-RestMethod -Uri $uri -Headers $header -Method Delete
-  Write-Host ""
-  Write-Host -ForegroundColor Green  "Volume ""$volname"" was successfully deleted"
+
+  [CmdletBinding()]
   
-  return $true
-  }
-  catch{
-   $error = (Get-XtremErrorMsg -errordata  $result) 
-   Write-Error $error
-   
-     
-  }
+  Param(
+  [Parameter()]
+  [String]$XmsName,
+  [Parameter()]
+  [String]$XtremioName,
+  [Parameter()]
+  [String]$Username,
+  [Parameter()]
+  [String]$Password,
+  [Parameter(Mandatory=$true,ValueFromPipelineByPropertyName=$true)]
+  [Alias('name')]
+  [String]$VolumeName
+  
+  )
+
+  $Route = '/types/volumes/'
+  $GetProperty = 'name='+$VolumeName
+  
+ 
+  New-XtremRequest -Method DELETE -Endpoint $Route -XmsName $XmsName -XtremioName $XtremioName -Username $Username -Password $Password -GetProperty $GetProperty
+ 
+ 
  
 }
 
 #Returns List of Snapshots
-Function Get-XtremSnapshots([string]$xioname,[string]$username,[string]$password){
+Function Get-XtremSnapshots{
 
   <#
      .DESCRIPTION
@@ -399,32 +403,30 @@ Function Get-XtremSnapshots([string]$xioname,[string]$username,[string]$password
 
   #>
  
- if($global:XtremUsername){
-  $username = $global:XtremUsername
-  $xioname = $global:XtremName
-  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
-  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
-  }
-
-
- $result=
-  try{  
-    $header = Get-XtremAuthHeader -username $username -password $password 
-    $uri = "https://$xioname/api/json/types/snapshots/"
-    $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get).snapshots
+ [cmdletbinding()]
+Param(
+    [parameter()]
+    [string]$XmsName,
+    [parameter()]
+    [String]$XtremioName = $global:XtremClusterName,
+    [parameter()]
+    [string]$Username,
+    [parameter()]
+    [string]$Password,
+    [parameter()]
+    [string[]]$Properties
+  )
     
-    return $data
-   }
-   catch{
-   $error = (Get-XtremErrorMsg -errordata  $result) 
-   Write-Error $error
-   
-   }
+    $Route = '/types/snapshots'
+ 
+    $ObjectSelection = 'snapshots'
+
+    New-XtremRequest -Method GET -Endpoint $Route -XmsName $XmsName -XtremioName $XtremioName -Properties $Properties -Username $Username -Password $Password -ObjectSelection $ObjectSelection
 
 }
 
 #Creates a Snapshot of a Volume
-Function New-XtremSnapshot([string]$xioname,[string]$username,[string]$password,[string]$volname,[string]$snapname,[string]$folder){
+Function New-XtremSnapshot{
 
  <#
      .DESCRIPTION
@@ -459,86 +461,44 @@ Function New-XtremSnapshot([string]$xioname,[string]$username,[string]$password,
 
   #>
 
-if($global:XtremUsername){
-  $username = $global:XtremUsername
-  $xioname = $global:XtremName
-  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
-  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
-  }
+[CmdletBinding()]
 
-if(!$folder){
- $folder = "/"
-}
+Param(
+[Parameter()]
+[String]$XmsName,
+[Parameter()]
+[String]$XtremioName = $global:XtremClusterName,
+[Parameter()]
+[String]$Username,
+[Parameter()]
+[String]$Password,
+[Parameter(Mandatory=$true)]
+[ValidateSet('tag-list','volume-list','consistency-group-id','snapshot-set-id')]
+[String]$ParentType,
+[Parameter(Mandatory=$true,ValueFromPipelineByPropertyName=$true)]
+[Alias('name')]
+[String[]]$ParentNames,
+[Parameter(Mandatory=$true)]
+[String]$SnapshotSetName
+)
 
-$result =
- try{
- $header = Get-XtremAuthHeader -username $username -password $password
- $body = @"
-  {
-    "ancestor-vol-id":"$volname",
-    "snap-vol-name":"$snapname",
-    "folder-id":"$folder"
-  }
+   $Route = '/types/snapshots'
+   $ParentNames = ($ParentNames | ConvertTo-Json).ToString()
+
+   $Body = @"
+   {
+      "$ParentType":$ParentNames,
+      "snapshot-set-name":"$SnapshotSetName",
+      "cluster-id":"$XtremioName"
+   }
 "@
-  $uri = "https://$xioname/api/json/types/snapshots/"
-  $data = Invoke-RestMethod -Uri $uri -Headers $header -Method Post -Body $body
-  Write-Host ""
-  Write-Host -ForegroundColor Green "Snapshot of volume ""$volname"" with name ""$snapname"" successfully created"
-  
-  return (Invoke-RestMethod -Uri ($data.links.href) -Method Get -Headers $header).content 
-  }
-  catch{
-   $error = (Get-XtremErrorMsg -errordata  $result) 
-   Write-Error $error
-   
-  }
+   $ObjectSelection = 'content'
+
+  New-XtremRequest -Method POST -Endpoint $Route -XmsName $XmsName -XtremioName $XtremioName -Body $Body -Username $Username -Password $Password -ObjectSelection $ObjectSelection
 }
 
-#Create Snapshots from a Folder <NOT COMPLETE>
-Function New-XtremSnapFolder([string]$xioname,[string]$username,[string]$password,[string]$foldertosnap,[string]$snapfoldername,[string]$snapsuffix){
-
-  if($global:XtremUsername){
-  $username = $global:XtremUsername
-  $xioname = $global:XtremName
-  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
-  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
-  }
-
-if(!$snapfoldername){
- $snapfoldername = "/"
-}
-
-$result =
- try{
- $header = Get-XtremAuthHeader -username $username -password $password
- $body = @"
-  {
-    "source-folder--id":"$foldertosnap",
-    "suffix":"$snapsuffix",
-    "source-folder-id":"$folder"
-  }
-"@
-  $uri = "https://$xioname/api/json/types/snapshots/"
-  $request = Invoke-RestMethod -Uri $uri -Headers $header -Method Post -Body $body
-  Write-Host ""
-  Write-Host -ForegroundColor Green "Snapshots of volumes within folder ""$foldertosnap"" have been created"
-  return $true
-  }
-  catch{
-   $error = (Get-XtremErrorMsg -errordata  $result) 
-   Write-Error $error
-   
-  }
 
 
-}
-
-#Create Snapshots of a set of Volumes (This will need to be modified for 3.0+ release)
-Function New-XtremSnapSet([string]$xioname,[string]$username,[string]$password,[string]$vollist,[string]$snaplist){
-
-    
-
-}
 
 
 #Deletes an XtremIO Snapshot (can probably get rid of this, Remove-XtremVolume also works on snaps)
@@ -591,195 +551,7 @@ Function Remove-XtremSnapShot([string]$xioname,[string]$username,[string]$passwo
      }
 }
 
-######### VOLUME FOLDER COMMANDS #########
 
-#Returns list of XtremIO Initiator Group Folders
-Function Get-XtremVolumeFolders([string]$xioname,[string]$username,[string]$password){
-
- <#
-     .DESCRIPTION
-      Retrieves list of volume folders 
-
-      .PARAMETER $xioname
-      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
-
-      .PARAMETER $username
-      Username for XtremIO XMS. Optional if XtremIO Session was initiated
-
-      .PARAMETER $password
-      Password for XtremIO XMS. Optional if XtremIO Session was initiated
-
-      .EXAMPLE
-      Get-XtremVolumeFolders
-
-      .EXAMPLE
-      Get-XtremVolumeFolders -xioname 10.4.45.24 -username admin -password Xtrem10
-
-  #>
-
-  if($global:XtremUsername){
-  $username = $global:XtremUsername
-  $xioname = $global:XtremName
-  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
-  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
-  }
-
-
- $result=
-  try{  
-    $header = Get-XtremAuthHeader -username $username -password $password 
-    $uri = "https://$xioname/api/json/types/volume-folders/"
-    $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get).folders
-    
-    return $data
-    
-   }
-   catch{
-   $error = (Get-XtremErrorMsg -errordata  $result) 
-   Write-Error $error
-   
-   }
-}
-
-#Returns details of an XtremIO Volume Folder. Defaults to root if foldername not entered 
-Function Get-XtremVolumeFolder([string]$xioname,[string]$username,[string]$password,[string]$foldername){
-
- <#
-     .DESCRIPTION
-      Retrieves details about a specific volume folder
-
-      .PARAMETER $xioname
-      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
-
-      .PARAMETER $username
-      Username for XtremIO XMS. Optional if XtremIO Session was initiated
-
-      .PARAMETER $password
-      Password for XtremIO XMS. Optional if XtremIO Session was initiated
-
-      .PARAMETER $foldername
-      Full path of the folder you want info about - I.E. /folder1/snaps
-
-      .EXAMPLE
-      Get-XtremVolumeFolder
-
-      .EXAMPLE
-      Get-XtremVolumeFolder -foldername /folder1/volumes
-
-      .EXAMPLE
-      Get-XtremVolumeFolder -xioname 10.4.45.24 -username admin -password Xtrem10 -foldername /folder1/volumes
-
-  #>
-    
-    if($global:XtremUsername){
-  $username = $global:XtremUsername
-  $xioname = $global:XtremName
-  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
-  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
-  }
-
-  if(!$foldername){
- $foldername = "/"
-}
-
-
- $result=
-  try{  
-    $header = Get-XtremAuthHeader -username $username -password $password 
-    $uri = "https://$xioname/api/json/types/volume-folders/?name=$foldername"
-    $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get).content 
-    
-    return $data
-    
-   }
-   catch{
-   $error = (Get-XtremErrorMsg -errordata  $result) 
-   Write-Error $error
-   
-   }
-}
-
-#Create a new Volume Folder. If no parent folder is specified, defaults to root.
-Function New-XtremVolumeFolder([string]$xioname,[string]$username,[string]$password,[string]$foldername,[string]$parentfolderpath){
-
-   <#
-     .DESCRIPTION
-      Creates a new volume folder
-
-      .PARAMETER $xioname
-      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
-
-      .PARAMETER $username
-      Username for XtremIO XMS. Optional if XtremIO Session was initiated
-
-      .PARAMETER $password
-      Password for XtremIO XMS. Optional if XtremIO Session was initiated
-
-      .PARAMETER $foldername
-      Name of the folder you want to create
-
-      .PARAMETER $parentfolderpath
-      Optional (and defaults to '/'). If not creating in root, need full path - I.E '/folder1/nested'
-
-      .EXAMPLE
-      New-XtremVolumeFolder -foldername NewFolder
-
-      .EXAMPLE
-      New-XtremVolumeFolder -foldername NewFolder -parentfolderpath /folder1/nested
-
-      .EXAMPLE
-      Get-XtremVolumeFolder -xioname 10.4.45.24 -username admin -password Xtrem10 -foldername /folder1/volumes
-
-  #>
-
-   if($global:XtremUsername){
-  $username = $global:XtremUsername
-  $xioname = $global:XtremName
-  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
-  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
-  }
-
-  
-  if(!$parentfolderpath)
-  {
-   $parentfolderpath = "/"
-  }
-
-
-$result =
- try{
- $header = Get-XtremAuthHeader -username $username -password $password
- $body = @"
-  {
-    "parent-folder-id":"$parentfolderpath",
-    "caption":"$foldername"
-  }
-"@
-  $uri = "https://$xioname/api/json/types/volume-folders/"
-  $request = Invoke-RestMethod -Uri $uri -Headers $header -Method Post -Body $body
-  Write-Host ""
-  Write-Host -ForegroundColor Green "Volume folder ""$foldername"" successfully created"
-  
-  $data = Invoke-RestMethod -Uri $request.links.href -Headers $header -Method Get
-
-  return $data.content
-  }
-  catch{
-   $error = (Get-XtremErrorMsg -errordata  $result) 
-   Write-Error $error
-   
- }
-}
-
-#Rename a Volume Folder
-Function Edit-XtremVolumeFolder([string]$xioname,[string]$username,[string]$password,[string]$foldername,[string]$newfoldername){
-
-}
-
-#Delete a Volume Folder
-Function Remove-XtremVolumeFolder([string]$xioname,[string]$username,[string]$password,[string]$foldername){
-
-}
 
 
 
@@ -1902,8 +1674,24 @@ $result = try{
 
                     $href = $data.links.href
 
+                    #Sometimes there are more than one object being created, so we'll return them all in an array
+                    if($href.count -gt 1){
+                      
+                      $arr = @()
 
+                      For($i = 0; $i -lt $href.count; $i++){
+                        $tmp = (Invoke-RestMethod -Method GET -Uri $href[$i] -Headers $Header).$ObjectSelection
+                        $arr += $tmp 
+                      }
+
+                      $arr
+                    }
+
+                    else{                  
+
+                    
                     (Invoke-RestMethod -Method GET -Uri $href -Headers $Header).$ObjectSelection
+                   }
 
                   }
 
@@ -1926,10 +1714,16 @@ $result = try{
                   ##Do this for DELETE Requests
                   if($Method -eq 'DELETE'){
 
-                    Invoke-RestMethod -Method $Method -Uri $Uri -Headers $Header
+                    $req = (Invoke-WebRequest -Method $Method -Uri $Uri -Headers $Header)
+
+                    if($req.StatusCode -eq 200){
+
+                      Write-Host -ForegroundColor Green "Delete Request Successful"
+                      $true
 
 
                   }
+                }
             }
             catch{
 

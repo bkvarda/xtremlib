@@ -3,31 +3,19 @@
 # xtremlib
  
 xtremlib is a PowerShell Module that wraps interactions with the XtremIO RESTful API
-The latest release (3.0) was written and tested against XIOS 3.x and can be found [here](https://github.com/bkvarda/xtremlib/releases/tag/3.0).
+This is the 4.0 (for use with XIOS 4.0 +) branch which is currently in development.The  
 
 ## xtremlib 4.0 (in development)
 No current release. Source will be updated in the 4.0 branch [here]()
 
 #### Upcoming changes 
-- Functions/switches that allow you to more easily manage complex snapshot workflows
+- Ability to leverage new 4.0 capabilities (CGs, Snapshot Sets, Snapshot Refresh, Perf metrics, etc)
 - Allowing for object piping between cmdlets 
-- Implementation of v2 API filters (faster performance)
-- Implementation of performance-related commands
+- Implementation of v2 API as well as filters for selecting only information you want.
 - Ability to run against XMS managing more than one system
 - And more!
 
-## xtremlib 3.0 (current)
-Latest release available [here](https://github.com/bkvarda/xtremlib/releases/tag/3.0). Source is available in the 3.0 branch [here]()
 
-#### Changes from 1.0 
-- All Get commands now return the full object returned from XtremIO - you can do with it what you'd like.
-- Error handling has been improved 
-- Post/Delete commands (Removes and updates) continue to return $true if they successfully complete
-- It should no longer be necessary to import the XtremIO certificate (cert validation is bypassed)
-- Remove-XtremVolumeMapping is now significantly faster (due to 3.0 API updates in conjunction with modified cmdlet)
-- You can now store encrypted credentials in a .txt file (useful for scripting)
-- Some variable names have changed to be more consistent between functions
-- Some cmdlet names have changes to be more consistent with PowerShell nomenclature
 
 
 #### Feedback
@@ -53,46 +41,61 @@ First generate and store secure credentials:
 ```
 New-XtremSecureCreds -path C:\temp
 ```
-Then start an XtremIO session (this stores creds (encrypted pw) as global vars for the PowerShell session:
+Then start an XtremIO session (this stores creds (encrypted pw)) as global vars for the PowerShell session:
 ```
-New-XtremSession -xioname 10.29.63.14 -credlocation C:\temp
+New-XtremSession -XmsName 10.29.63.14 -XtremioName xio10 -CredLocation C:\temp
 ```
-Get Cluster Statistics
+4.0 Introduced the ability for a single XMS to manage multiple XtremIO clusters. Even if you only manage one cluster, it's mandatory in this module to include the name. If you aren't sure of the name, run this:
 ```
-Get-XtremClusterStatus
+Get-XtremClusterNames
+```
+Get All Cluster Statistics
+```
+Get-XtremClusterStatistics
+```
+Or you can return specific properties like this:
+```
+Get-XtremClusterStatistics -Properties iops,logical-capacity-in-use
+```
+Retrieve a list of all volumes:
+```
+Get-XtremVolumes
+```
+Or retrieve all volumes including certain properties:
+```
+Get-XtremVolumes -Properties iops,wr-bw,vol-id,creation-time
+```
+Retrieve a specific volume
+```
+Get-XtremVolume -VolumeName navi
 ```
 Create a Volume
 ```
-New-XtremVolume -volname navi -volsize 1048g
+New-XtremVolume -VolumeName navi -VolumeSize 1048g
 ```
-Create an Initiator Group
+Edit a Volume
 ```
-New-XtremInitiatorGroup -igname naviig
+Edit-XtremVolume -VolumeName navi -ParameterToModify vol-name -NewValue navi2
+Edit-XtremVolume -VolumeName navi -ParameterToModify vol-size -NewValue 16g
 ```
-Map a Volume to an Initiator Group
+Return list of all snapshots
 ```
-New-XtremVolumeMapping -volname navi -igname naviig
+Get-XtremSnapshots
 ```
-Create a snapshot of a volume
+Create a snapshot set of volume(s), consistency group, volumes with certain tag(s), or snapshot set 
 ```
-New-XtremSnapshot -volname navi -snapname navisnap
+New-XtremSnapshot -ParentType volume-list -ParentNames navi,navi1 -SnapshotSetName navisnaps
+New-XtremSnapshot -ParentType volume-list -ParentNames navi -SnapshotSetName navisnap
+New-XtremSnapshot -ParentType consistency-group-id -ParentNames navicg -SnapshotSetName navisnaps
+New-XtremSnapshot -ParentType tag-list -ParentNames PROD,PRODUCTION -SnapshotSetName navisnaps
+
 ```
-Map the snapshot to and Initiator Group
+
+Delete a volume or snapshot set 
 ```
-New-XtremVolumeMapping -volname navisnap -igname naviig
+Remove-XtremVolume -VolumeName navi
 ```
-Unmap the volume from an Initiator Group
-```
-Remove-XtremVolumeMapping -volname navi -igname naviig
-```
-Delete a volume or snapshot 
-```
-Remove-XtremVolume -volname navi
-```
-Delete an Initiator Group
-```
-Remove-XtremInitiatorGroup -igname naviig
-```
+
 And many more!
 
 ## Full Command List
