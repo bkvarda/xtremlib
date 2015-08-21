@@ -35,7 +35,7 @@ $global:XtremClusterName = $null
 
 
 #Returns Various XtremIO Statistics
-Function Get-XtremClusterStatistics
+Function Get-XtremCluster
 { 
   <#
      .DESCRIPTION
@@ -62,8 +62,8 @@ Function Get-XtremClusterStatistics
 Param (
     [parameter()]
     [string]$XmsName,
-    [parameter(Mandatory=$true)]
-    [string]$XtremioName,
+    [parameter(Mandatory=$true,Position=0)]
+    [string]$XtremioName = $global:XtremClusterName,
     [parameter()]
     [string]$Username,
     [Parameter()]
@@ -78,11 +78,6 @@ Param (
   $ObjectSelection = 'content'
 
   New-XtremRequest -Method GET -Endpoint $Route -XmsName $XmsName -Username $Username -Password $Password -ObjectSelection $ObjectSelection -GetProperty $GetProperty -Properties $Properties   
-
-}
-
-#Returns list of recent system events
-Function Get-XtremEvents([string]$xioname,[string]$username,[string]$password){
 
 }
 
@@ -170,7 +165,7 @@ Param (
     [string]$XtremioName,
     [parameter()]
     [string]$Username,
-    [parameter(Mandatory=$true)]
+    [parameter(Mandatory=$true,Position=0)]
     [string]$VolumeName,
     [parameter()]
     [string]$Password,
@@ -229,10 +224,10 @@ Param(
 [String]$Username,
 [Parameter()]
 [String]$Password,
-[Parameter(Mandatory=$true,ValueFromPipelineByPropertyName=$true)]
+[Parameter(Mandatory=$true,ValueFromPipelineByPropertyName=$true,Position=0)]
 [Alias('name')]
 [String]$VolumeName,
-[Parameter(Mandatory=$true)]
+[Parameter(Mandatory=$true,Position=1)]
 [String]$VolumeSize
 )
 
@@ -294,7 +289,7 @@ Param(
 [String]$Username,
 [Parameter()]
 [String]$Password,
-[Parameter(Mandatory=$true,ValueFromPipelineByPropertyName=$true)]
+[Parameter(Mandatory=$true,ValueFromPipelineByPropertyName=$true,Position=0)]
 [Alias('name')]
 [String]$VolumeName,
 [Parameter(Mandatory=$true)]
@@ -363,7 +358,7 @@ Function Remove-XtremVolume{
   [String]$Username,
   [Parameter()]
   [String]$Password,
-  [Parameter(Mandatory=$true,ValueFromPipelineByPropertyName=$true)]
+  [Parameter(Mandatory=$true,ValueFromPipelineByPropertyName=$true,Position=0)]
   [Alias('name')]
   [String]$VolumeName
   
@@ -497,16 +492,12 @@ Param(
   New-XtremRequest -Method POST -Endpoint $Route -XmsName $XmsName -XtremioName $XtremioName -Body $Body -Username $Username -Password $Password -ObjectSelection $ObjectSelection
 }
 
-
-
-
-
-#Deletes an XtremIO Snapshot (can probably get rid of this, Remove-XtremVolume also works on snaps)
-Function Remove-XtremSnapShot([string]$xioname,[string]$username,[string]$password,[string]$snapname){
+#Creates a Snapshot of a Volume
+Function New-XtremSnapshotRefresh{
 
  <#
      .DESCRIPTION
-      Deletes a snapshot
+      Creates a snapshot of an existing volume
 
       .PARAMETER $xioname
       IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
@@ -516,163 +507,79 @@ Function Remove-XtremSnapShot([string]$xioname,[string]$username,[string]$passwo
 
       .PARAMETER $password
       Password for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $volname
+      Name of the volume you would like to snap
 
       .PARAMETER $snapname
-      Name of the snapshot you would like to remove
+      Name of the new snapshot you are creating
+
+      .PARAMETER $folder
+      Optional parameter. Full path of the folder you want the snapshot created in - I.E /folder1/folder2.Defaults to root.
 
       .EXAMPLE
-      Remove-XtremSnapshot -snapname testsnap
+      New-XtremSnapshot -volname testvol -snapname testsnap
 
       .EXAMPLE
-      Remove-XtremSnapshot -snapname testnap -xioname 10.4.45.24 -username admin -password Xtrem10
-
-  #>
- 
- if($global:XtremUsername){
-  $username = $global:XtremUsername
-  $xioname = $global:XtremName
-  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
-  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
-  }
- 
- $result = try{
-      $header = Get-XtremAuthHeader -username $username -password $password
-      $uri = "https://$xioname/api/json/types/snapshots/?name=$snapname"
-      $request = Invoke-RestMethod -Uri $uri -Headers $header -Method Delete
-      Write-Host ""
-      Write-Host -ForegroundColor Green "Successfully deleted snapshot ""$snapname"""
-      Write-Host ""
-      return $true
-     }
-     catch{
-        $error = (Get-XtremErrorMsg -errordata  $result) 
-        Write-Error $error
-         
-     }
-}
-
-
-
-
-
-
-######### INITIATOR GROUP FOLDER COMMANDS#########
-
-#Returns list of XtremIO Initiator Group Folders
-Function Get-XtremIGFolders([string]$xioname,[string]$username,[string]$password){
-
- <#
-     .DESCRIPTION
-      Retrieves list of initiator group folders
-
-      .PARAMETER $xioname
-      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
-
-      .PARAMETER $username
-      Username for XtremIO XMS. Optional if XtremIO Session was initiated
-
-      .PARAMETER $password
-      Password for XtremIO XMS. Optional if XtremIO Session was initiated
+      New-XtremSnapshot -volname testvol -snapname testsnap -folder /testfolder/snaps
 
       .EXAMPLE
-      Get-XtremIGFolders
-
-      .EXAMPLE
-      Get-XtremIGFolders -xioname 10.4.45.24 -username admin -password Xtrem10
+      Get-XtremSnapshots -xioname 10.4.45.24 -username admin -password Xtrem10
 
   #>
 
-  if($global:XtremUsername){
-  $username = $global:XtremUsername
-  $xioname = $global:XtremName
-  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
-  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
-  }
+[CmdletBinding()]
 
+Param(
+[Parameter()]
+[String]$XmsName,
+[Parameter()]
+[String]$XtremioName = $global:XtremClusterName,
+[Parameter()]
+[String]$Username,
+[Parameter()]
+[String]$Password,
+[Parameter(Mandatory=$true)]
+[ValidateSet('from-volume-id','from-consistency-group-id','from-snapshot-set-id')]
+[String]$ParentType,
+[Parameter(Mandatory=$true,ValueFromPipelineByPropertyName=$true)]
+[Alias('name')]
+[String]$ParentName,
+[Parameter(Mandatory=$true)]
+[ValidateSet('to-volume-id','to-consistency-group-id','to-snapshot-set-id')]
+[String]$RefreshType,
+[Parameter(Mandatory=$true)]
+[String]$RefreshName,
+[Parameter(Mandatory=$true)]
+[String]$NewName,
+[Parameter()]
+[ValidateSet('true','false')]
+[String]$DeleteOriginal = 'false'
+)
 
+   $Route = '/types/snapshots'
+  
 
-
- $result=
-  try{  
-    $header = Get-XtremAuthHeader -username $username -password $password 
-    $uri = "https://$xioname/api/json/types/ig-folders/"
-    $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get).folders
-    
-    return $data 
-    
+   $Body = @"
+   {
+      "$ParentType":"$ParentName",
+      "cluster-id":"$XtremioName",
+      "$RefreshType":"$RefreshName",
+      "snapshot-set-name": "$NewName"
    }
-   catch{
-   $error = (Get-XtremErrorMsg -errordata  $result) 
-   Write-Error $error
+"@
    
-   }
+
+   $ObjectSelection = 'content'
+
+  New-XtremRequest -Method POST -Endpoint $Route -XmsName $XmsName -XtremioName $XtremioName -Body $Body -Username $Username -Password $Password -ObjectSelection $ObjectSelection
 }
 
-#Returns details of an XtremIO Initiator Group Folder. Defaults to root if foldername not entered 
-Function Get-XtremIGFolder([string]$xioname,[string]$username,[string]$password,[string]$foldername){
-
- <#
-     .DESCRIPTION
-      Retrieves details about a specific initiator group folder
-
-      .PARAMETER $xioname
-      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
-
-      .PARAMETER $username
-      Username for XtremIO XMS. Optional if XtremIO Session was initiated
-
-      .PARAMETER $password
-      Password for XtremIO XMS. Optional if XtremIO Session was initiated
-
-      .PARAMETER $foldername
-      Full path of the folder you want info about - I.E. /folder1/snaps
-
-      .EXAMPLE
-      Get-XtremIGFolder
-
-      .EXAMPLE
-      Get-XtremIGFolder -foldername /folder1/volumes
-
-      .EXAMPLE
-      Get-XtremIGFolder -xioname 10.4.45.24 -username admin -password Xtrem10 -foldername /folder1/volumes
-
-  #>
-    
-    if($global:XtremUsername){
-  $username = $global:XtremUsername
-  $xioname = $global:XtremName
-  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
-  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
-  }
-
-  if(!$foldername)
-  {
-   $foldername = "/"
-  }
-
-
- $result=
-  try{  
-    $header = Get-XtremAuthHeader -username $username -password $password 
-    $uri = "https://$xioname/api/json/types/ig-folders/?name=$foldername"
-    $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get).content
-    
-    return $data
-    
-   }
-   catch{
-   $error = (Get-XtremErrorMsg -errordata  $result) 
-   Write-Error $error
-   
-   }
-}
-
-#Create a new IG Folder. If no parent folder is specified, defaults to root.
-Function New-XtremIGFolder([string]$xioname,[string]$username,[string]$password,[string]$foldername,[string]$parentfolderpath){
+Function Remove-XtremSnapshot{
 
   <#
      .DESCRIPTION
-      Creates a new initiator group folder
+      Deletes an existing volume. Returns true if successful. 
 
       .PARAMETER $xioname
       IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
@@ -683,71 +590,199 @@ Function New-XtremIGFolder([string]$xioname,[string]$username,[string]$password,
       .PARAMETER $password
       Password for XtremIO XMS. Optional if XtremIO Session was initiated
 
-      .PARAMETER $foldername
-      Name of the folder you want to create
-
-      .PARAMETER $parentfolderpath
-      Optional (and defaults to '/'). If not creating in root, need full path - I.E '/folder1/nested'
+      .PARAMETER $volname
+      Name of the volume you would like to remove 
 
       .EXAMPLE
-      New-XtremIGFolder -foldername NewFolder
+      Remove-XtremVolume -volname testvol
 
       .EXAMPLE
-      New-XtremIGFolder -foldername NewFolder -parentfolderpath /folder1/nested
-
-      .EXAMPLE
-      New-XtremIGFolder -xioname 10.4.45.24 -username admin -password Xtrem10 -foldername NewFolder
+      Remove-XtremVolume -xioname 10.4.45.24 -username admin -password Xtrem10 -volname testvol
 
   #>
 
-   if($global:XtremUsername){
-  $username = $global:XtremUsername
-  $xioname = $global:XtremName
-  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
-  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
-  }
-
+  [CmdletBinding()]
   
-  if(!$parentfolderpath)
-  {
-   $parentfolderpath = "/"
-  }
-
-
-$result =
- try{
- $header = Get-XtremAuthHeader -username $username -password $password
- $body = @"
-  {
-    "parent-folder-id":"$parentfolderpath",
-    "caption":"$foldername"
-  }
-"@
-  $uri = "https://$xioname/api/json/types/ig-folders/"
-  $request = Invoke-RestMethod -Uri $uri -Headers $header -Method Post -Body $body
-  Write-Host ""
-  Write-Host -ForegroundColor Green "Initiator Group folder ""$foldername"" successfully created"
+  Param(
+  [Parameter()]
+  [String]$XmsName,
+  [Parameter()]
+  [String]$XtremioName,
+  [Parameter()]
+  [String]$Username,
+  [Parameter()]
+  [String]$Password,
+  [Parameter(Mandatory=$true,ValueFromPipelineByPropertyName=$true,Position=0)]
+  [Alias('name')]
+  [String]$SnapshotName
   
-  $data = Invoke-RestMethod -Uri $request.links.href -Headers $header -Method Get
+  )
 
-  return $data.content
-  }
-  catch{
-   $error = (Get-XtremErrorMsg -errordata  $result) 
-   Write-Error $error
-   
- }
+  $Route = '/types/snapshots'
+  $GetProperty = 'name='+$SnapshotName
+  
+ 
+  New-XtremRequest -Method DELETE -Endpoint $Route -XmsName $XmsName -XtremioName $XtremioName -Username $Username -Password $Password -GetProperty $GetProperty
+ 
+ 
+ 
 }
 
-#Rename an IG Folder
-Function Edit-XtremIGFolder([string]$xioname,[string]$username,[string]$password,[string]$foldername,[string]$newfoldername){
+#Returns List of Snapshots
+Function Get-XtremSnapshotSets{
+
+  <#
+     .DESCRIPTION
+      Retrieves list of snapshots 
+
+      .PARAMETER $xioname
+      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $username
+      Username for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $password
+      Password for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .EXAMPLE
+      Get-XtremSnapshots
+
+      .EXAMPLE
+      Get-XtremSnapshots -xioname 10.4.45.24 -username admin -password Xtrem10
+
+  #>
+ 
+ [cmdletbinding()]
+Param(
+    [parameter()]
+    [string]$XmsName,
+    [parameter()]
+    [String]$XtremioName = $global:XtremClusterName,
+    [parameter()]
+    [string]$Username,
+    [parameter()]
+    [string]$Password,
+    [parameter()]
+    [string[]]$Properties
+  )
+    
+    $Route = '/types/snapshot-sets'
+ 
+    $ObjectSelection = 'snapshot-sets'
+
+    New-XtremRequest -Method GET -Endpoint $Route -XmsName $XmsName -XtremioName $XtremioName -Properties $Properties -Username $Username -Password $Password -ObjectSelection $ObjectSelection
 
 }
 
-#Delete an IG Folder
-Function Remove-XtremIGFolder([string]$xioname,[string]$username,[string]$password,[string]$foldername){
+#Returns List of Snapshots
+Function Get-XtremSnapshotSet{
+
+  <#
+     .DESCRIPTION
+      Retrieves list of snapshots 
+
+      .PARAMETER $xioname
+      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $username
+      Username for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $password
+      Password for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .EXAMPLE
+      Get-XtremSnapshots
+
+      .EXAMPLE
+      Get-XtremSnapshots -xioname 10.4.45.24 -username admin -password Xtrem10
+
+  #>
+ 
+ [cmdletbinding()]
+Param(
+    [parameter()]
+    [string]$XmsName,
+    [parameter()]
+    [String]$XtremioName = $global:XtremClusterName,
+    [parameter()]
+    [string]$Username,
+    [parameter()]
+    [string]$Password,
+    [parameter(Mandatory=$true,Position=0)]
+    [string]$SnapshotSetName,
+    [parameter()]
+    [string[]]$Properties
+  )
+    
+    $Route = '/types/snapshot-sets'
+ 
+    $ObjectSelection = 'content'
+
+    $GetProperty = 'name='+$SnapshotSetName
+
+    New-XtremRequest -Method GET -Endpoint $Route -XmsName $XmsName -XtremioName $XtremioName -Properties $Properties -Username $Username -Password $Password -ObjectSelection $ObjectSelection -GetProperty $GetProperty
 
 }
+
+Function Remove-XtremSnapshotSet{
+
+  <#
+     .DESCRIPTION
+      Deletes an existing volume. Returns true if successful. 
+
+      .PARAMETER $xioname
+      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $username
+      Username for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $password
+      Password for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $volname
+      Name of the volume you would like to remove 
+
+      .EXAMPLE
+      Remove-XtremVolume -volname testvol
+
+      .EXAMPLE
+      Remove-XtremVolume -xioname 10.4.45.24 -username admin -password Xtrem10 -volname testvol
+
+  #>
+
+  [CmdletBinding()]
+  
+  Param(
+  [Parameter()]
+  [String]$XmsName,
+  [Parameter()]
+  [String]$XtremioName,
+  [Parameter()]
+  [String]$Username,
+  [Parameter()]
+  [String]$Password,
+  [Parameter(Mandatory=$true,ValueFromPipelineByPropertyName=$true,Position=0)]
+  [Alias('name')]
+  [String]$SnapshotSetName
+  
+  )
+
+  $Route = '/types/snapshot-sets'
+  $GetProperty = 'name='+$SnapshotSetName
+  
+ 
+  New-XtremRequest -Method DELETE -Endpoint $Route -XmsName $XmsName -XtremioName $XtremioName -Username $Username -Password $Password -GetProperty $GetProperty
+ 
+ 
+ 
+}
+
+
+
+
+
+
+
 
 ######### INITIATOR COMMANDS #########
 
@@ -1673,14 +1708,17 @@ $result = try{
                     $data = (Invoke-RestMethod -Method $Method -Uri $Uri -Body $Body -Headers $Header)
 
                     $href = $data.links.href
-
+                    Write-Host $data
+                    Write-Host $href
                     #Sometimes there are more than one object being created, so we'll return them all in an array
                     if($href.count -gt 1){
                       
                       $arr = @()
 
                       For($i = 0; $i -lt $href.count; $i++){
+                        Write-Host $href[$i]
                         $tmp = (Invoke-RestMethod -Method GET -Uri $href[$i] -Headers $Header).$ObjectSelection
+                        Write-Host $tmp 
                         $arr += $tmp 
                       }
 

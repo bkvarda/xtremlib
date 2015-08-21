@@ -51,17 +51,17 @@ Get-XtremClusterNames
 ```
 Get All Cluster Statistics
 ```
-Get-XtremClusterStatistics
+Get-XtremCluster
 ```
 Or you can return specific properties like this:
 ```
-Get-XtremClusterStatistics -Properties iops,logical-capacity-in-use
+Get-XtremCluster -Properties iops,logical-capacity-in-use
 ```
 Retrieve a list of all volumes:
 ```
 Get-XtremVolumes
 ```
-Or retrieve all volumes including certain properties:
+Or retrieve all volumes including certain properties. Most GET commands allow you to supply a properties list:
 ```
 Get-XtremVolumes -Properties iops,wr-bw,vol-id,creation-time
 ```
@@ -69,9 +69,14 @@ Retrieve a specific volume
 ```
 Get-XtremVolume -VolumeName navi
 ```
+Positional parameters exist for most GET/DELETE commands, as well as less complex PUT/POST commands:
+```
+Get-XtremVolume navi
+```
 Create a Volume
 ```
 New-XtremVolume -VolumeName navi -VolumeSize 1048g
+New-XtremVolume navi 1048g
 ```
 Edit a Volume
 ```
@@ -82,6 +87,11 @@ Return list of all snapshots
 ```
 Get-XtremSnapshots
 ```
+Return list of all snapshot sets
+```
+Get-XtremSnapshotSets
+```
+
 Create a snapshot set of volume(s), consistency group, volumes with certain tag(s), or snapshot set 
 ```
 New-XtremSnapshot -ParentType volume-list -ParentNames navi,navi1 -SnapshotSetName navisnaps
@@ -90,10 +100,25 @@ New-XtremSnapshot -ParentType consistency-group-id -ParentNames navicg -Snapshot
 New-XtremSnapshot -ParentType tag-list -ParentNames PROD,PRODUCTION -SnapshotSetName navisnaps
 
 ```
+Create a snapshot of a volume, consistency group, or snapshot set and refresh a volume, consistency group, or snapshot set
+```
+New-XtremSnapshotRefresh -ParentType from-volume-id -ParentName navi -RefreshType to-snapshot-set-id -RefreshName navisnaps -NewName navisnaps1
+New-XtremSnapshotRefresh -ParentType from-consistency-group-id -ParentName navicg -RefreshType to-snapshot-set-id -RefreshName navisnaps -NewName navisnaps1
+New-XtremSnapshotRefresh -ParentType from-snapshot-set-id -ParentName navisnaps -RefreshType to-consistency-group-id -RefreshName navicg -NewName navicg1
+```
 
 Delete a volume or snapshot set 
 ```
 Remove-XtremVolume -VolumeName navi
+```
+This also deletes a snapshot if you like it more
+```
+Remove-XtremSnapshot -SnapshotName navisnap
+```
+Remove a snapshot set
+```
+Remove-XtremSnapshotSet -SnapshotSetName navisnapset
+Remove-XtremSnapshotSet navisnapset
 ```
 
 And many more!
