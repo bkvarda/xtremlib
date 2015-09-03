@@ -120,6 +120,52 @@ Remove a snapshot set
 Remove-XtremSnapshotSet -SnapshotSetName navisnapset
 Remove-XtremSnapshotSet navisnapset
 ```
+Retrieve list of all Tags
+```
+Get-XtremTags
+```
+Retrieve list of all Tags that are Volume Tags (this is an example of how to make things PowerShelly)
+```
+Get-XtremTags -Properties 'object-type' | Where 'object-type' -eq Volume | Select * | Format-Table -AutoSize
+
+object-type guid                             name               index
+----------- ----                             ----               -----
+Volume      246588e85c1748b296c9c1286fdca8b9 /Volume/Test          24
+Volume      0b3c79b04f0542cabfbcdd0be97bd97e /Volume/jesse         25
+Volume      ef429dd7f7c0470eb70175726008e137 /Volume/aqrsqld       27
+Volume      3fab56f5c96946ab9878fa7c75999d4d /Volume/QA            23
+Volume      245c597e45a240fc8cf1a6833beb4687 /Volume                1
+Volume      b9c2adb8fa69427c883641666d5e8705 /Volume/PRODUCTION     3
+Volume      c783112035034dcfb3cc292b88732b52 /Volume/LAB           13
+Volume      3794fa0fc5924f1fa04eedf12a0d2282 /Volume/Oracle        19
+
+```
+Get info about a specific Tag:
+```
+Get-XtremTag -TagName navitag -ObjectType Volume
+```
+Delete a Tag
+```
+Remove-XtremTag -TagName navitag -ObjectType Volume
+```
+Create a Tag
+```
+New-XtremTag navitag -ObjectType Volume
+New-XtremTag -TagName navitag -ObjectType Snapshot
+```
+Assign a Tag to an Object:
+```
+Set-XtremTag -ObjectType Volume -ObjectName navi -TagName navitag
+```
+Or Assign a Tag to an Object this way:
+```
+Get-XtremTag navitag -ObjectType Volume | Set-XtremTag navi
+Get-XtremTag navitag Snapshot | Set-XtremTag navi
+```
+Get Initiator Groups
+```
+Get-XtremInitiatorGroups
+```
 
 And many more!
 

@@ -295,7 +295,7 @@ Param(
 [Parameter(Mandatory=$true)]
 [ValidateSet('vol-size','vol-name','small-io-alerts','unaligned-io-alerts','vaai-tp-alerts')]
 [String]$ParameterToModify,
-[Parameter(Mandatory=$true)]
+[Parameter(Mandatory=$true,Position=1)]
 [String]$NewValue
 )
 
@@ -478,8 +478,11 @@ Param(
 )
 
    $Route = '/types/snapshots'
+   if($ParentNames.Count -eq 1){
+     $ParentNames = '['+$ParentNames+']'
+   }
    $ParentNames = ($ParentNames | ConvertTo-Json).ToString()
-
+   Write-Host $ParentNames
    $Body = @"
    {
       "$ParentType":$ParentNames,
@@ -777,21 +780,316 @@ Function Remove-XtremSnapshotSet{
  
 }
 
+######### TAG COMMANDS #########
+
+Function Get-XtremTags{
+
+  <#
+     .DESCRIPTION
+      Retrieves list of Volumes
+
+      .PARAMETER $xioname
+      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $username
+      Username for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $password
+      Password for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .EXAMPLE
+      Get-XtremVolumes
+
+      .EXAMPLE
+      Get-XtremVolumes -xioname 10.4.45.24 -username admin -password Xtrem10
+
+  #>
+
+  [cmdletbinding()]
+Param(
+    [parameter()]
+    [string]$XmsName,
+    [parameter()]
+    [String]$XtremioName = $global:XtremClusterName,
+    [parameter()]
+    [string]$Username,
+    [parameter()]
+    [string]$Password,
+    [parameter()]
+    [string[]]$Properties
+  )
+    
+    $Route = '/types/tags'
+ 
+    $ObjectSelection = 'tags'
+
+    New-XtremRequest -Method GET -Endpoint $Route -XmsName $XmsName -XtremioName $XtremioName -Properties $Properties -Username $Username -Password $Password -ObjectSelection $ObjectSelection
+
+}
+
+#Returns Statistics for a Specific Volume or Snapshot
+Function Get-XtremTag{
+  
+   <#
+     .DESCRIPTION
+      Retrieves information about an XtremIO volume or snapshot
+
+      .PARAMETER $xioname
+      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $username
+      Username for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $password
+      Password for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $volname
+      Name of the volume you would like information for
+
+      .EXAMPLE
+      Get-XtremVolume -volname testvol
+
+      .EXAMPLE
+      Get-XtremVolume -xioname 10.4.45.24 -username admin -password Xtrem10 -volname testvol
+
+  #>
+
+  [cmdletbinding()]
+Param (
+    [parameter()]
+    [string]$XmsName,
+    [parameter()]
+    [string]$XtremioName,
+    [parameter()]
+    [string]$Username,
+    [parameter(Mandatory=$true,Position=0)]
+    [string]$TagName,
+    [parameter()]
+    [string]$Password,
+    [Parameter()]
+    [string[]]$Properties,
+    [Parameter(Mandatory=$true)]
+    [ValidateSet('Volume','ConsistencyGroup','Snapshot','SnapshotSet','InitiatorGroup','Initiator','Scheduler')]
+    [String]$ObjectType
+  )
+   
+  $Route = '/types/tags'
+  $GetProperty = 'name=/'+$ObjectType+'/'+$TagName
+  $ObjectSelection = 'content'
+
+  New-XtremRequest -Method GET -Endpoint $Route -XmsName $XmsName -Username $Username -Password $Password -ObjectSelection $ObjectSelection -GetProperty $GetProperty -Properties $Properties
+    
+}
+
+#Creates a Volume. If no folder specified, defaults to root. 
+Function New-XtremTag{
+
+ <#
+     .DESCRIPTION
+      Creates a new volume. Returns true if successful.
+
+      .PARAMETER $xioname
+      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $username
+      Username for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $password
+      Password for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $volname
+      Name of the volume you would like information for
+
+      .PARAMETER $volsize
+      Size of the volume you want to create with trailing 'm', for MB, 'g' GB, 't' for TB
+
+      .PARAMETER $folder 
+      Optional parameter. Requires full path format IE /folder1/folder2. Defaults to root
+
+      .EXAMPLE
+      New-XtremVolume -volname testvol -volsize 1048m
+
+      .EXAMPLE
+      New-XtremVolume -xioname 10.4.45.24 -username admin -password Xtrem10 -volname testvol -volsize 1048m
+
+  #>
+[CmdletBinding()]
+
+Param(
+[Parameter()]
+[String]$XmsName,
+[Parameter()]
+[String]$XtremioName,
+[Parameter()]
+[String]$Username,
+[Parameter()]
+[String]$Password,
+[Parameter(Mandatory=$true)]
+[ValidateSet('Volume','ConsistencyGroup','Snapshot','SnapshotSet','InitiatorGroup','Initiator','Scheduler')]
+[String]$ObjectType,
+[Parameter(Mandatory=$True,Position=0)]
+[String]$TagName
+)
+
+   $Route = '/types/tags'
+   $Body = @"
+   {
+      "entity":"$ObjectType",
+      "tag-name":"$TagName"
+   }
+"@
+   $ObjectSelection = 'content'
+
+  New-XtremRequest -Method POST -Endpoint $Route -XmsName $XmsName -XtremioName $XtremioName -Body $Body -Username $Username -Password $Password -ObjectSelection $ObjectSelection
+  
+
+}
+
+
+#Deletes a Volume
+Function Remove-XtremTag{
+
+  <#
+     .DESCRIPTION
+      Deletes an existing volume. Returns true if successful. 
+
+      .PARAMETER $xioname
+      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $username
+      Username for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $password
+      Password for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $volname
+      Name of the volume you would like to remove 
+
+      .EXAMPLE
+      Remove-XtremVolume -volname testvol
+
+      .EXAMPLE
+      Remove-XtremVolume -xioname 10.4.45.24 -username admin -password Xtrem10 -volname testvol
+
+  #>
+
+  [CmdletBinding()]
+  
+  Param(
+  [Parameter()]
+  [String]$XmsName,
+  [Parameter()]
+  [String]$XtremioName,
+  [Parameter()]
+  [String]$Username,
+  [Parameter()]
+  [String]$Password,
+  [Parameter(Mandatory=$true,ValueFromPipelineByPropertyName=$true,Position=0)]
+  [Alias('name')]
+  [String]$TagName,
+  [Parameter(Mandatory=$true)]
+  [ValidateSet('Volume','ConsistencyGroup','Snapshot','SnapshotSet','InitiatorGroup','Initiator','Scheduler')]
+  [String]$ObjectType
+  
+  )
+
+  $Route = '/types/tags'
+  $GetProperty = 'name='+'/'+$ObjectType+'/'+$TagName
+
+ 
+  New-XtremRequest -Method DELETE -Endpoint $Route -XmsName $XmsName -XtremioName $XtremioName -Username $Username -Password $Password -GetProperty $GetProperty
+ 
+ 
+ 
+}
+
+#Creates a Volume. If no folder specified, defaults to root. 
+Function Set-XtremTag{
+
+ <#
+     .DESCRIPTION
+      Creates a new volume. Returns true if successful.
+
+      .PARAMETER $xioname
+      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $username
+      Username for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $password
+      Password for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $volname
+      Name of the volume you would like information for
+
+      .PARAMETER $volsize
+      Size of the volume you want to create with trailing 'm', for MB, 'g' GB, 't' for TB
+
+      .PARAMETER $folder 
+      Optional parameter. Requires full path format IE /folder1/folder2. Defaults to root
+
+      .EXAMPLE
+      New-XtremVolume -volname testvol -volsize 1048m
+
+      .EXAMPLE
+      New-XtremVolume -xioname 10.4.45.24 -username admin -password Xtrem10 -volname testvol -volsize 1048m
+
+  #>
+[CmdletBinding()]
+
+Param(
+[Parameter()]
+[String]$XmsName,
+[Parameter()]
+[String]$XtremioName = $global:XtremClusterName,
+[Parameter()]
+[String]$Username,
+[Parameter()]
+[String]$Password,
+[Parameter(Mandatory=$true,ValueFromPipelineByPropertyName=$true)]
+[ValidateSet('Volume','ConsistencyGroup','Snapshot','SnapshotSet','InitiatorGroup','Initiator','Scheduler')]
+[Alias('object-type')]
+[String]$ObjectType,
+[Parameter(Mandatory=$True,ValueFromPipelineByPropertyName=$true,Position=1)]
+[Alias('caption')]
+[String]$TagName,
+[Parameter(Mandatory=$true, Position=0)]
+[String]$ObjectName
+)
+
+   $Route = '/types/tags'
+   
+   $GetProperty = 'name='+'/'+$ObjectType+'/'+$TagName 
+   $Body = @"
+   {
+      "entity":"$ObjectType",
+      "entity-details":"$ObjectName",
+      "cluster-id":"$XtremioName"
+
+   }
+"@
+   
+
+  New-XtremRequest -Method PUT -Endpoint $Route -XmsName $XmsName -XtremioName $XtremioName -Body $Body -Username $Username -Password $Password -GetProperty $GetProperty
+  
+
+}
 
 
 
 
+######### MAPPING COMMANDS #########
 
 
 
 ######### INITIATOR COMMANDS #########
 
-#Returns List of Initiators
-Function Get-XtremInitiators([string]$xioname,[string]$username,[string]$password){
+#Returns List of Volumes
+Function Get-XtremInitiatorGroups{
 
   <#
      .DESCRIPTION
-      Returns list of initiators
+      Retrieves list of Volumes
 
       .PARAMETER $xioname
       IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
@@ -803,196 +1101,41 @@ Function Get-XtremInitiators([string]$xioname,[string]$username,[string]$passwor
       Password for XtremIO XMS. Optional if XtremIO Session was initiated
 
       .EXAMPLE
-      Get-XtremInitiators
+      Get-XtremVolumes
 
       .EXAMPLE
-      Get-XtremInitiators -xioname 10.4.45.24 -username admin -password Xtrem10
+      Get-XtremVolumes -xioname 10.4.45.24 -username admin -password Xtrem10
 
   #>
-   
-   if($global:XtremUsername){
-  $username = $global:XtremUsername
-  $xioname = $global:XtremName
-  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
-  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
-  }
 
-
-   $result=
-  try{  
-    $header = Get-XtremAuthHeader -username $username -password $password 
-    $uri = "https://$xioname/api/json/types/initiators/"
-    $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get).initiators
+  [cmdletbinding()]
+Param(
+    [parameter()]
+    [string]$XmsName,
+    [parameter()]
+    [String]$XtremioName = $global:XtremClusterName,
+    [parameter()]
+    [string]$Username,
+    [parameter()]
+    [string]$Password,
+    [parameter()]
+    [string[]]$Properties
+  )
     
+    $Route = '/types/initiator-groups'
+ 
+    $ObjectSelection = 'initiator-groups'
 
+    New-XtremRequest -Method GET -Endpoint $Route -XmsName $XmsName -XtremioName $XtremioName -Properties $Properties -Username $Username -Password $Password -ObjectSelection $ObjectSelection
 
-    return $data
-   }
-   catch{
-   $error = (Get-XtremErrorMsg -errordata  $result) 
-   Write-Error $error
-   
-   }
 }
 
-#Returns info for a specific XtremIO Initiator
-Function Get-XtremInitiator([string]$xioname,[string]$username,[string]$password,[string]$initiatorname){
-
-  <#
-     .DESCRIPTION
-      Returns info for a specific initiator
-
-      .PARAMETER $xioname
-      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
-
-      .PARAMETER $username
-      Username for XtremIO XMS. Optional if XtremIO Session was initiated
-
-      .PARAMETER $password
-      Password for XtremIO XMS. Optional if XtremIO Session was initiated
-
-      .PARAMETER $initiatorname
-      Name of a specific initiator
-
-      .EXAMPLE
-      Get-XtremInitiator -initiatorname testinit1
-
-      .EXAMPLE
-      Get-XtremInitiator -xioname 10.4.45.24 -username admin -password Xtrem10 -initiatorname testinit1
-
-  #>
- 
- if($global:XtremUsername){
-  $username = $global:XtremUsername
-  $xioname = $global:XtremName
-  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
-  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
-  }
- 
- $result=
-  try{  
-    $header = Get-XtremAuthHeader -username $username -password $password 
-    $uri = "https://$xioname/api/json/types/initiators/?name=$initiatorname"
-    $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get).content
-
-
-    return $data
-   }
-   catch{
-   $error = (Get-XtremErrorMsg -errordata  $result) 
-   Write-Error $error
-   
-   }
-}
-
-#Creates initiator and adds to initiator group
-Function New-XtremInitiator([string]$xioname,[string]$username,[string]$password,[string]$initiatorname,[string]$address,[string]$igname){
- 
-  <#
-     .DESCRIPTION
-      Creates a new initiator and adds to an initiator group
-
-      .PARAMETER $xioname
-      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
-
-      .PARAMETER $username
-      Username for XtremIO XMS. Optional if XtremIO Session was initiated
-
-      .PARAMETER $password
-      Password for XtremIO XMS. Optional if XtremIO Session was initiated
-
-      .PARAMETER $initiatorname
-      Name of a specific initiator
-
-      .PARAMETER $address
-      WWN of initiator - I.E. 00:00:00:00:00:00:00:10
-
-      .PARAMETER $igname
-      Name of initiator group
-
-      .EXAMPLE
-      New-XtremInitiator -initiatorname testinit1 -address 00:00:00:00:00:00:00:10 -igname testig
-
-      .EXAMPLE
-      New-XtremInitiator -initiatorname testinit1 -address 00:00:00:00:00:00:00:10 -igname testig -xioname 10.4.45.24 -username admin -password Xtrem10
-
-  #>
+#Returns Statistics for a Specific Volume or Snapshot
+Function Get-XtremInitiatorGroup{
   
-  if($global:XtremUsername){
-  $username = $global:XtremUsername
-  $xioname = $global:XtremName
-  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
-  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
-  }
-
-  $result=
-  try{  
-    $header = Get-XtremAuthHeader -username $username -password $password 
-    $uri = "https://$xioname/api/json/types/initiators/"
-    $body = @"
-   {
-      "initiator-name":"$initiatorname",
-      "port-address":"$address",
-      "ig-id":"$igname"
-   }
-"@
-
-   $request = (Invoke-RestMethod -Uri $uri -Headers $header -Method POST -Body $body)
-   Write-Host ""
-   Write-Host -ForegroundColor Green "Successfully created initiator ""$initiatorname"" with address ""$address"" in initiator group ""$igname"""
-   Write-Host ""
-   
-   $data = Invoke-RestMethod -Uri $request.links.href -Headers $header -Method Get
-
-   return $data.content
-   }
-   catch{
-       $error = (Get-XtremErrorMsg -errordata  $result) 
-        Write-Error $error
-        
-   }
-}
-
-#Modifies initiator <NEED TO TEST> <THIS IS NOT COMPLETE>
-Function Edit-XtremInitiator([string]$xioname,[string]$username,[string]$password,[string]$initiatorname,[string]$newinitiatorname,[string]$newportaddress){
-
-  if($global:XtremUsername){
-  $username = $global:XtremUsername
-  $xioname = $global:XtremName
-  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
-  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
-  }
-
-  $result=
-  try{  
-    $header = Get-XtremAuthHeader -username $username -password $password 
-    $uri = "https://$xioname/api/json/types/initiators/?name=$initiatorname"
-    $body = @"
-   {
-      "ig-id":"$newinitiatorname"
-   }
-"@
-
-   $request = (Invoke-RestMethod -Uri $uri -Headers $header -Method POST -Body $body)
-   Write-Host ""
-   Write-Host -ForegroundColor Green "Successfully created initiator ""$initiatorname"" with address ""$address"" in initiator group ""$igname"""
-   Write-Host ""
-   return $true
-   }
-   catch{
-   $error = (Get-XtremErrorMsg -errordata  $result) 
-   Write-Error $error
-   
-   } 
-
-}
-
-#Deletes initiator <NEED TO TEST>
-Function Remove-XtremInitiator([string]$xioname,[string]$username,[string]$password,[string]$initiatorname){
-
-  <#
+   <#
      .DESCRIPTION
-      Deletes an initiator
+      Retrieves information about an XtremIO volume or snapshot
 
       .PARAMETER $xioname
       IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
@@ -1003,95 +1146,111 @@ Function Remove-XtremInitiator([string]$xioname,[string]$username,[string]$passw
       .PARAMETER $password
       Password for XtremIO XMS. Optional if XtremIO Session was initiated
 
-      .PARAMETER $initiatorname
-      Name of a initiator you want to delete
+      .PARAMETER $volname
+      Name of the volume you would like information for
 
       .EXAMPLE
-      Remove-XtremInitiator -initiatorname testinit1
+      Get-XtremVolume -volname testvol
 
       .EXAMPLE
-      Remove-XtremInitiator -xioname 10.4.45.24 -username admin -password Xtrem10 -initiatorname testinit1
+      Get-XtremVolume -xioname 10.4.45.24 -username admin -password Xtrem10 -volname testvol
 
   #>
 
-    if($global:XtremUsername){
-  $username = $global:XtremUsername
-  $xioname = $global:XtremName
-  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
-  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
-  }
- 
- $result=
-  try{  
-    $header = Get-XtremAuthHeader -username $username -password $password 
-    $uri = "https://$xioname/api/json/types/initiators/?name=$initiatorname"
-    $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Delete)
-    return $true
-   }
-   catch{
-   $error = (Get-XtremErrorMsg -errordata  $result) 
-   Write-Error $error
+  [cmdletbinding()]
+Param (
+    [parameter()]
+    [string]$XmsName,
+    [parameter()]
+    [string]$XtremioName,
+    [parameter()]
+    [string]$Username,
+    [parameter(Mandatory=$true,Position=0)]
+    [string]$VolumeName,
+    [parameter()]
+    [string]$Password,
+    [Parameter()]
+    [string[]]$Properties
+  )
    
-   }
+  $Route = '/types/initiator-groups'
+  $GetProperty = 'name='+$VolumeName
+  $ObjectSelection = 'content'
 
-}
-
-######### INITIATOR GROUP COMMANDS #########
-
-#Returns list of XtremIO Initiator Groups
-Function Get-XtremInitiatorGroups([string]$xioname,[string]$username,[string]$password){
-
-  <#
-     .DESCRIPTION
-      Returns list of initiator groups
-
-      .PARAMETER $xioname
-      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
-
-      .PARAMETER $username
-      Username for XtremIO XMS. Optional if XtremIO Session was initiated
-
-      .PARAMETER $password
-      Password for XtremIO XMS. Optional if XtremIO Session was initiated
-
-      .EXAMPLE
-      Get-XtremInitiatorGroups
-
-      .EXAMPLE
-      Get-XtremInitiatorGroups -xioname 10.4.45.24 -username admin -password Xtrem10
-
-  #>
-   
-   if($global:XtremUsername){
-  $username = $global:XtremUsername
-  $xioname = $global:XtremName
-  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
-  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
-  }
-   
+  New-XtremRequest -Method GET -Endpoint $Route -XmsName $XmsName -Username $Username -Password $Password -ObjectSelection $ObjectSelection -GetProperty $GetProperty -Properties $Properties
     
-  $result=
-  try{  
-    $header = Get-XtremAuthHeader -username $username -password $password 
-    $uri = "https://$xioname/api/json/types/initiator-groups"
-    $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get)
+}
 
-    return $data.'initiator-groups'
+#Creates a Volume. If no folder specified, defaults to root. 
+Function New-XtremInitiatorGroup{
+
+ <#
+     .DESCRIPTION
+      Creates a new volume. Returns true if successful.
+
+      .PARAMETER $xioname
+      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $username
+      Username for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $password
+      Password for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $volname
+      Name of the volume you would like information for
+
+      .PARAMETER $volsize
+      Size of the volume you want to create with trailing 'm', for MB, 'g' GB, 't' for TB
+
+      .PARAMETER $folder 
+      Optional parameter. Requires full path format IE /folder1/folder2. Defaults to root
+
+      .EXAMPLE
+      New-XtremVolume -volname testvol -volsize 1048m
+
+      .EXAMPLE
+      New-XtremVolume -xioname 10.4.45.24 -username admin -password Xtrem10 -volname testvol -volsize 1048m
+
+  #>
+[CmdletBinding()]
+
+Param(
+[Parameter()]
+[String]$XmsName,
+[Parameter()]
+[String]$XtremioName,
+[Parameter()]
+[String]$Username,
+[Parameter()]
+[String]$Password,
+[Parameter(Mandatory=$true,ValueFromPipelineByPropertyName=$true,Position=0)]
+[Alias('name')]
+[String]$VolumeName,
+[Parameter(Mandatory=$true,Position=1)]
+[String]$VolumeSize
+)
+
+   $Route = '/types/volumes'
+   $Body = @"
+   {
+      "vol-name":"$VolumeName",
+      "vol-size":"$VolumeSize"
    }
-   catch{
-   $error = (Get-XtremErrorMsg -errordata  $result) 
-   Write-Error $error
-   
-   }
+"@
+   $ObjectSelection = 'content'
+
+  New-XtremRequest -Method POST -Endpoint $Route -XmsName $XmsName -XtremioName $XtremioName -Body $Body -Username $Username -Password $Password -ObjectSelection $ObjectSelection
+  
 
 }
 
-#Returns info for a specific XtremIO initiator group
-Function Get-XtremInitiatorGroup([string]$xioname,[string]$username,[string]$password,[string]$igname){
+#Modify a Volume 
+Function Edit-XtremInitiatorGroup{
 
    <#
      .DESCRIPTION
-      Returns info for a specific initiator group
+      Modifies an existing volume. Returns true if successful. 
 
       .PARAMETER $xioname
       IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
@@ -1102,118 +1261,117 @@ Function Get-XtremInitiatorGroup([string]$xioname,[string]$username,[string]$pas
       .PARAMETER $password
       Password for XtremIO XMS. Optional if XtremIO Session was initiated
 
-      .PARAMETER $igname
-      Name of a specific initiator group
+      .PARAMETER $volname
+      Name of the volume you would like information for
+
+      .PARAMETER $volsize
+      New size of volume with trailing 'm', for MB, 'g' GB, 't' for TB
+
+      .PARAMETER $folder 
+      Optional parameter. 
 
       .EXAMPLE
-      Get-XtremInitiatorGroup -igname testig
+      Edit-XtremVolume -volname testvol -volsize 2048m
 
       .EXAMPLE
-      Get-XtremInitiatorGroup -xioname 10.4.45.24 -username admin -password Xtrem10 -igname testig
+      Edit-XtremVolume -xioname 10.4.45.24 -username admin -password Xtrem10 -volname testvol -volsize 1048m
+
+  #>
+  
+  [CmdletBinding()]
+
+Param(
+[Parameter()]
+[String]$XmsName,
+[Parameter()]
+[String]$XtremioName = $global:XtremClusterName,
+[Parameter()]
+[String]$Username,
+[Parameter()]
+[String]$Password,
+[Parameter(Mandatory=$true,ValueFromPipelineByPropertyName=$true,Position=0)]
+[Alias('name')]
+[String]$VolumeName,
+[Parameter(Mandatory=$true)]
+[ValidateSet('vol-size','vol-name','small-io-alerts','unaligned-io-alerts','vaai-tp-alerts')]
+[String]$ParameterToModify,
+[Parameter(Mandatory=$true)]
+[String]$NewValue
+)
+
+   
+   
+
+   $Route = '/types/volumes'
+   $GetProperty = 'name='+$VolumeName
+
+
+   $Body = @"
+   {
+      
+      "cluster-id":"$XtremioName",
+      "$ParameterToModify":"$NewValue"
+   }
+"@
+   $ObjectSelection = 'content'
+
+  New-XtremRequest -Method PUT -Endpoint $Route -XmsName $XmsName -XtremioName $XtremioName -Body $Body -Username $Username -Password $Password -ObjectSelection $ObjectSelection -GetProperty $GetProperty 
+
+
+}
+
+#Deletes a Volume
+Function Remove-XtremInitiatorGroup{
+
+  <#
+     .DESCRIPTION
+      Deletes an existing volume. Returns true if successful. 
+
+      .PARAMETER $xioname
+      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $username
+      Username for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $password
+      Password for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $volname
+      Name of the volume you would like to remove 
+
+      .EXAMPLE
+      Remove-XtremVolume -volname testvol
+
+      .EXAMPLE
+      Remove-XtremVolume -xioname 10.4.45.24 -username admin -password Xtrem10 -volname testvol
 
   #>
 
-     if($global:XtremUsername){
-  $username = $global:XtremUsername
-  $xioname = $global:XtremName
-  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
-  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
-  }
-   
-    
-  $result=
-  try{  
-    $header = Get-XtremAuthHeader -username $username -password $password 
-    $uri = "https://$xioname/api/json/types/initiator-groups/?name=$igname"
-    $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get).content
+  [CmdletBinding()]
+  
+  Param(
+  [Parameter()]
+  [String]$XmsName,
+  [Parameter()]
+  [String]$XtremioName,
+  [Parameter()]
+  [String]$Username,
+  [Parameter()]
+  [String]$Password,
+  [Parameter(Mandatory=$true,ValueFromPipelineByPropertyName=$true,Position=0)]
+  [Alias('name')]
+  [String]$VolumeName
+  
+  )
 
-    return $data
-   }
-   catch{
-   $error = (Get-XtremErrorMsg -errordata  $result) 
-   Write-Error $error
-   
-   }
-
-}
-
-#Creates initiator group <THIS IS NOT COMPLETE>
-Function New-XtremInitiatorGroup([string]$xioname,[string]$username,[string]$password,[string]$igname,[string]$folderpath){
-
-    if($global:XtremUsername){
-  $username = $global:XtremUsername
-  $xioname = $global:XtremName
-  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
-  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
-  }
-
-  if(!$folderpath){
-    
-    $folderpath = "/"
-
-  }
-
-  $result=
-  try{  
-    $header = Get-XtremAuthHeader -username $username -password $password 
-    $uri = "https://$xioname/api/json/types/initiator-groups/"
-    $body = @"
-   {
-      "parent-folder-id":"$folderpath",
-      "ig-name":"$igname"
-   }
-"@
-
-   $request = (Invoke-RestMethod -Uri $uri -Headers $header -Method POST -Body $body)
-   Write-Host ""
-   Write-Host -ForegroundColor Green "Successfully created initiator group ""$igname"""
-   Write-Host ""
-   
-   $data = Invoke-RestMethod -Uri $request.links.href -Headers $header -Method Get
-
-   return $data.content
-
-   }
-   catch{
-   $error = (Get-XtremErrorMsg -errordata  $result) 
-   Write-Error $error
-   
-   }
-
-}
-
-#Modifies initiator group
-Function Edit-XtremInitiatorGroup([string]$xioname,[string]$username,[string]$password,[string]$igname){
-
-}
-
-#Deletes initiator group <NEED TO TEST THIS>
-Function Remove-XtremInitiatorGroup([string]$xioname,[string]$username,[string]$password,[string]$igname){
-
-     if($global:XtremUsername){
-  $username = $global:XtremUsername
-  $xioname = $global:XtremName
-  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
-  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
-  }
-   
-    
-  $result=
-  try{  
-    $header = Get-XtremAuthHeader -username $username -password $password 
-    $uri = "https://$xioname/api/json/types/initiator-groups/?name=$igname"
-    $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Delete)
-    
-    Write-Host ""
-    Write-Host -ForegroundColor Green "Successfully deleted initiator group ""$igname"""
-    return $true
-   }
-   catch{
-   $error = (Get-XtremErrorMsg -errordata  $result) 
-   Write-Error $error
-   
-   }
-
+  $Route = '/types/volumes/'
+  $GetProperty = 'name='+$VolumeName
+  
+ 
+  New-XtremRequest -Method DELETE -Endpoint $Route -XmsName $XmsName -XtremioName $XtremioName -Username $Username -Password $Password -GetProperty $GetProperty
+ 
+ 
+ 
 }
 
 ######### TARGET INFO COMMANDS #########
@@ -1598,6 +1756,11 @@ Param(
   $XtremioName = $global:XtremClusterName
   $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
   $Password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+  }
+
+  #Special case...tags doesn't take cluster name
+  if($Endpoint -like '*tags*' -and ($Method -eq 'GET' -or $Method -eq 'DELETE')){
+   $XtremioName = $null
   }
 
 $result = try{    
