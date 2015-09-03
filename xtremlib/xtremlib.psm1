@@ -482,7 +482,7 @@ Param(
      $ParentNames = '['+$ParentNames+']'
    }
    $ParentNames = ($ParentNames | ConvertTo-Json).ToString()
-   Write-Host $ParentNames
+   
    $Body = @"
    {
       "$ParentType":$ParentNames,
@@ -1166,7 +1166,7 @@ Param (
     [parameter()]
     [string]$Username,
     [parameter(Mandatory=$true,Position=0)]
-    [string]$VolumeName,
+    [string]$InitiatorGroupName,
     [parameter()]
     [string]$Password,
     [Parameter()]
@@ -1174,7 +1174,7 @@ Param (
   )
    
   $Route = '/types/initiator-groups'
-  $GetProperty = 'name='+$VolumeName
+  $GetProperty = 'name='+$InitiatorGroupName
   $ObjectSelection = 'content'
 
   New-XtremRequest -Method GET -Endpoint $Route -XmsName $XmsName -Username $Username -Password $Password -ObjectSelection $ObjectSelection -GetProperty $GetProperty -Properties $Properties
@@ -1219,71 +1219,6 @@ Param(
 [Parameter()]
 [String]$XmsName,
 [Parameter()]
-[String]$XtremioName,
-[Parameter()]
-[String]$Username,
-[Parameter()]
-[String]$Password,
-[Parameter(Mandatory=$true,ValueFromPipelineByPropertyName=$true,Position=0)]
-[Alias('name')]
-[String]$VolumeName,
-[Parameter(Mandatory=$true,Position=1)]
-[String]$VolumeSize
-)
-
-   $Route = '/types/volumes'
-   $Body = @"
-   {
-      "vol-name":"$VolumeName",
-      "vol-size":"$VolumeSize"
-   }
-"@
-   $ObjectSelection = 'content'
-
-  New-XtremRequest -Method POST -Endpoint $Route -XmsName $XmsName -XtremioName $XtremioName -Body $Body -Username $Username -Password $Password -ObjectSelection $ObjectSelection
-  
-
-}
-
-#Modify a Volume 
-Function Edit-XtremInitiatorGroup{
-
-   <#
-     .DESCRIPTION
-      Modifies an existing volume. Returns true if successful. 
-
-      .PARAMETER $xioname
-      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
-
-      .PARAMETER $username
-      Username for XtremIO XMS. Optional if XtremIO Session was initiated
-
-      .PARAMETER $password
-      Password for XtremIO XMS. Optional if XtremIO Session was initiated
-
-      .PARAMETER $volname
-      Name of the volume you would like information for
-
-      .PARAMETER $volsize
-      New size of volume with trailing 'm', for MB, 'g' GB, 't' for TB
-
-      .PARAMETER $folder 
-      Optional parameter. 
-
-      .EXAMPLE
-      Edit-XtremVolume -volname testvol -volsize 2048m
-
-      .EXAMPLE
-      Edit-XtremVolume -xioname 10.4.45.24 -username admin -password Xtrem10 -volname testvol -volsize 1048m
-
-  #>
-  
-  [CmdletBinding()]
-
-Param(
-[Parameter()]
-[String]$XmsName,
-[Parameter()]
 [String]$XtremioName = $global:XtremClusterName,
 [Parameter()]
 [String]$Username,
@@ -1291,34 +1226,45 @@ Param(
 [String]$Password,
 [Parameter(Mandatory=$true,ValueFromPipelineByPropertyName=$true,Position=0)]
 [Alias('name')]
-[String]$VolumeName,
-[Parameter(Mandatory=$true)]
-[ValidateSet('vol-size','vol-name','small-io-alerts','unaligned-io-alerts','vaai-tp-alerts')]
-[String]$ParameterToModify,
-[Parameter(Mandatory=$true)]
-[String]$NewValue
+[String]$InitiatorGroupName,
+[Parameter(Position=1)]
+[String[]]$InitiatorList = $null
 )
 
+   $Route = '/types/initiator-groups'
    
-   
+   #if there is an initiator list, we'll do this
+   if($InitiatorList){
+       if($InitiatorList.Count -eq 1){
+         $InitiatorList = '['+$InitiatorList+']'
+       }
+       $InitiatorList = ($InitiatorList | ConvertTo-Json).ToString()
 
-   $Route = '/types/volumes'
-   $GetProperty = 'name='+$VolumeName
-
-
-   $Body = @"
-   {
-      
-      "cluster-id":"$XtremioName",
-      "$ParameterToModify":"$NewValue"
-   }
+       $Body = @"
+       {
+          "ig-name":"$InitiatorGroupName",
+          "initiator-list":"$InitiatorList"
+       }
 "@
+   }
+   else{
+       $Body = @"
+       {
+          "ig-name":"$InitiatorGroupName"
+       }   
+"@   
+   
+   }   
+
+
    $ObjectSelection = 'content'
 
-  New-XtremRequest -Method PUT -Endpoint $Route -XmsName $XmsName -XtremioName $XtremioName -Body $Body -Username $Username -Password $Password -ObjectSelection $ObjectSelection -GetProperty $GetProperty 
-
+  New-XtremRequest -Method POST -Endpoint $Route -XmsName $XmsName -XtremioName $XtremioName -Body $Body -Username $Username -Password $Password -ObjectSelection $ObjectSelection
+  
 
 }
+
+
 
 #Deletes a Volume
 Function Remove-XtremInitiatorGroup{
@@ -1347,35 +1293,224 @@ Function Remove-XtremInitiatorGroup{
 
   #>
 
-  [CmdletBinding()]
-  
-  Param(
-  [Parameter()]
-  [String]$XmsName,
-  [Parameter()]
-  [String]$XtremioName,
-  [Parameter()]
-  [String]$Username,
-  [Parameter()]
-  [String]$Password,
-  [Parameter(Mandatory=$true,ValueFromPipelineByPropertyName=$true,Position=0)]
-  [Alias('name')]
-  [String]$VolumeName
-  
+  [cmdletbinding()]
+Param (
+    [parameter()]
+    [string]$XmsName,
+    [parameter()]
+    [string]$XtremioName = $global:XtremClusterName,
+    [parameter()]
+    [string]$Username,
+    [parameter(Mandatory=$true,Position=0)]
+    [string]$InitiatorGroupName,
+    [parameter()]
+    [string]$Password,
+    [Parameter()]
+    [string[]]$Properties
   )
-
-  $Route = '/types/volumes/'
-  $GetProperty = 'name='+$VolumeName
-  
+   
+  $Route = '/types/initiator-groups'
+  $GetProperty = 'name='+$InitiatorGroupName
  
-  New-XtremRequest -Method DELETE -Endpoint $Route -XmsName $XmsName -XtremioName $XtremioName -Username $Username -Password $Password -GetProperty $GetProperty
+
+  New-XtremRequest -Method DELETE -Endpoint $Route -XmsName $XmsName -Username $Username -Password $Password -GetProperty $GetProperty
  
  
  
 }
 
-######### TARGET INFO COMMANDS #########
+#Returns List of Volumes
+Function Get-XtremInitiators{
 
+  <#
+     .DESCRIPTION
+      Retrieves list of Volumes
+
+      .PARAMETER $xioname
+      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $username
+      Username for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $password
+      Password for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .EXAMPLE
+      Get-XtremVolumes
+
+      .EXAMPLE
+      Get-XtremVolumes -xioname 10.4.45.24 -username admin -password Xtrem10
+
+  #>
+
+  [cmdletbinding()]
+Param(
+    [parameter()]
+    [string]$XmsName,
+    [parameter()]
+    [String]$XtremioName = $global:XtremClusterName,
+    [parameter()]
+    [string]$Username,
+    [parameter()]
+    [string]$Password,
+    [parameter()]
+    [string[]]$Properties
+  )
+    
+    $Route = '/types/initiators'
+ 
+    $ObjectSelection = 'initiators'
+
+    New-XtremRequest -Method GET -Endpoint $Route -XmsName $XmsName -XtremioName $XtremioName -Properties $Properties -Username $Username -Password $Password -ObjectSelection $ObjectSelection
+
+}
+
+Function Get-XtremInitiator{
+  
+   <#
+     .DESCRIPTION
+      Retrieves information about an XtremIO volume or snapshot
+
+      .PARAMETER $xioname
+      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $username
+      Username for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $password
+      Password for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $volname
+      Name of the volume you would like information for
+
+      .EXAMPLE
+      Get-XtremVolume -volname testvol
+
+      .EXAMPLE
+      Get-XtremVolume -xioname 10.4.45.24 -username admin -password Xtrem10 -volname testvol
+
+  #>
+
+  [cmdletbinding()]
+Param (
+    [parameter()]
+    [string]$XmsName,
+    [parameter()]
+    [string]$XtremioName,
+    [parameter()]
+    [string]$Username,
+    [parameter(Mandatory=$true,Position=0)]
+    [string]$InitiatorName,
+    [parameter()]
+    [string]$Password,
+    [Parameter()]
+    [string[]]$Properties
+  )
+   
+  $Route = '/types/initiators'
+  $GetProperty = 'name='+$InitiatorName
+  $ObjectSelection = 'content'
+
+  New-XtremRequest -Method GET -Endpoint $Route -XmsName $XmsName -Username $Username -Password $Password -ObjectSelection $ObjectSelection -GetProperty $GetProperty -Properties $Properties
+    
+}
+
+######### TARGET INFO COMMANDS #########
+#Returns List of Volumes
+Function Get-XtremTargets{
+
+  <#
+     .DESCRIPTION
+      Retrieves list of Volumes
+
+      .PARAMETER $xioname
+      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $username
+      Username for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $password
+      Password for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .EXAMPLE
+      Get-XtremVolumes
+
+      .EXAMPLE
+      Get-XtremVolumes -xioname 10.4.45.24 -username admin -password Xtrem10
+
+  #>
+
+  [cmdletbinding()]
+Param(
+    [parameter()]
+    [string]$XmsName,
+    [parameter()]
+    [String]$XtremioName = $global:XtremClusterName,
+    [parameter()]
+    [string]$Username,
+    [parameter()]
+    [string]$Password,
+    [parameter()]
+    [string[]]$Properties
+  )
+    
+    $Route = '/types/targets'
+ 
+    $ObjectSelection = 'targets'
+
+    New-XtremRequest -Method GET -Endpoint $Route -XmsName $XmsName -XtremioName $XtremioName -Properties $Properties -Username $Username -Password $Password -ObjectSelection $ObjectSelection
+
+}
+
+Function Get-XtremTarget{
+  
+   <#
+     .DESCRIPTION
+      Retrieves information about an XtremIO volume or snapshot
+
+      .PARAMETER $xioname
+      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $username
+      Username for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $password
+      Password for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $volname
+      Name of the volume you would like information for
+
+      .EXAMPLE
+      Get-XtremVolume -volname testvol
+
+      .EXAMPLE
+      Get-XtremVolume -xioname 10.4.45.24 -username admin -password Xtrem10 -volname testvol
+
+  #>
+
+  [cmdletbinding()]
+Param (
+    [parameter()]
+    [string]$XmsName,
+    [parameter()]
+    [string]$XtremioName,
+    [parameter()]
+    [string]$Username,
+    [parameter(Mandatory=$true,Position=0)]
+    [string]$TargetName,
+    [parameter()]
+    [string]$Password,
+    [Parameter()]
+    [string[]]$Properties
+  )
+   
+  $Route = '/types/targets'
+  $GetProperty = 'name='+$TargetName
+  $ObjectSelection = 'content'
+
+  New-XtremRequest -Method GET -Endpoint $Route -XmsName $XmsName -Username $Username -Password $Password -ObjectSelection $ObjectSelection -GetProperty $GetProperty -Properties $Properties
+    
+}
 
 
 

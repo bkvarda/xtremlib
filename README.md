@@ -3,14 +3,18 @@
 # xtremlib
  
 xtremlib is a PowerShell Module that wraps interactions with the XtremIO RESTful API
-This is the 4.0 (for use with XIOS 4.0 +) branch which is currently in development.The  
+This is the 4.0 (for use with XIOS 4.0 +) module. Much has changed since the older release, if you want to use the previous version it is still available under releases.
+The old release will be compatible with XIOS 3.X and 4.X, but this release will only work with 4.0+. Due to significant API changes, this module has undergone alot of rewrite
+so commands have changed, with alot of new functionality. If you use the old module for automation, you should still be able to use it even after upgrading to 4.0... but new
+features will only be available here. 
 
-## xtremlib 4.0 (in development)
-No current release. Source will be updated in the 4.0 branch [here]()
+Looking for testers! If you work at EMC or are a customer with XtremIO and want an easy way
+to contribute to the {Code} community, this would be huge!
+
 
 #### Upcoming changes 
 - Ability to leverage new 4.0 capabilities (CGs, Snapshot Sets, Snapshot Refresh, Perf metrics, etc)
-- Allowing for object piping between cmdlets 
+- Allowing for object piping between cmdlets, positional parameters, and other 'PowerShell' things 
 - Implementation of v2 API as well as filters for selecting only information you want.
 - Ability to run against XMS managing more than one system
 - And more!
@@ -19,6 +23,7 @@ No current release. Source will be updated in the 4.0 branch [here]()
 
 
 #### Feedback
+- Looking for testers!
 - For feature request, please raise an issue
 - For bugs, please, raise an issue
 
@@ -166,6 +171,63 @@ Get Initiator Groups
 ```
 Get-XtremInitiatorGroups
 ```
+Get Info about a single Initiator Group:
+```
+Get-XtremInitiatorGroup naviig
+Get-XtremInitiatorGroup -InitiatorGroupName naviig
+```
+Create a new Initiator Group
+```
+New-XtremInitiatorGroup naviig -InitiatorList init1,init2
+New-XtremInitiatorGroup naviig
+```
+Retrieve all Targets and Initiators (names)
+```
+Get-XtremTargets
+Get-XtremInitiators
+```
+Or retrieve all Targets and Initiators with the other kinds of info you are looking for:
+```
+Get-XtremInitiators -Properties name,port-address | Select name,port-address | Format-Table -AutoSize
+
+name            port-address           
+----            ------------           
+Lab_C12_B4_HBA1 20:00:00:8f:74:12:01:02
+Lab_C12_B3_HBA2 20:00:00:8f:74:22:01:11
+Lab_C12_B5_HBA1 20:00:00:8f:75:12:01:01
+Lab_C12_B4_HBA2 20:00:00:8f:74:22:01:12
+Lab_C12_B6_HBA1 20:00:00:8f:75:12:01:02
+Lab_C12_B5_HBA2 20:00:00:8f:75:22:01:11
+Lab_C12_B6_HBA2 20:00:00:8f:75:22:01:12
+C3_B1_HBA1      20:00:00:25:b5:a0:00:ef
+C3_B2_HBA1      20:00:00:25:b5:a0:00:3f
+C3_B1_HBA2      20:00:00:25:b5:b0:01:ef
+Lab_C12_B1_HBA1 20:00:00:8f:73:12:00:01
+C3_B2_HBA2      20:00:00:25:b5:b0:01:2f
+Lab_C12_B2_HBA1 20:00:00:8f:73:12:00:02
+Lab_C12_B1_HBA2 20:00:00:8f:73:22:00:11
+Lab_C12_B3_HBA1 20:00:00:8f:74:12:01:01
+Lab_C12_B2_HBA2 20:00:00:8f:73:22:00:12
+
+
+Get-XtremTargets -Properties name,port-address | Select name,port-address | Format-Table -AutoSize
+
+name          port-address                                           
+----          ------------                                           
+X1-SC1-fc1    51:4f:0c:51:42:5f:c8:00                                
+X1-SC1-iscsi1 iqn.2008-05.com.xtremio:apm00144610315-514f0c51425fc900
+X1-SC1-fc2    51:4f:0c:51:42:5f:c8:01                                
+X1-SC2-fc1    51:4f:0c:51:42:5f:c8:04                                
+X1-SC1-iscsi2 iqn.2008-05.com.xtremio:apm00144610315-514f0c51425fc901
+X1-SC2-iscsi1 iqn.2008-05.com.xtremio:apm00144610315-514f0c51425fc904
+X1-SC2-fc2    51:4f:0c:51:42:5f:c8:05                                
+X1-SC2-iscsi2 iqn.2008-05.com.xtremio:apm00144610315-514f0c51425fc905
+```
+Get details about a specific Target or Initiator
+```
+Get-XtremInitiator init1
+Get-XtremTarget X1-SC1-fc1
+```
 
 And many more!
 
@@ -186,7 +248,7 @@ documentation are released with no warranties or SLAs and are intended to be sup
 
 ## History
  
-Began on 10/22/14 
+Began around 08/2015 
  
 
 ></content>
