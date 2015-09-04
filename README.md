@@ -272,12 +272,19 @@ And more...
 ## How to Retrieve Historical Performance Stats
 This was a new feature in 4.0, and because there are alot of options this is getting its own section. The command to be ran is like this:
 ```
-Get-XtremPerformance -ObjectType <objecttype> -Granularity <granularity> -ObjectNames <[optional]specific object names> -Properties <[optional] specific properties> -TimeFrame <[optional] timeframe>
+Get-XtremPerformance -ObjectType <objecttype> -Granularity <granularity> -ObjectNames <[optional]specific object names> -Properties <[optional] specific properties> -FromDateTime <[optional] timeframe> -ToDateTime <[optional] timeframe>
 ```
 These are the possible ObjectTypes:
 ```
 SnapshotGroup, Initiator, Target, XEnv, DataProtectionGroup, Volume, Cluster, Tag, InitiatorGroup, SSD, TargetGroup, Xms
 ```
+FromDateTime and ToDateTime are optional - default time range is 30 days from the current date. If you input specific ranges, they must be parseable by Get-Date, such as the below examples:
+```
+Get-XtremPerformance -ObjectType Cluster -Granularity one_day -FromDateTime '08/28/2015' -ToDateTime '09/4/2015'
+Get-XtremPerformance -ObjectType Cluster -Granularity one_minute -FromDateTime '09/4/2015 08:00' -ToDateTime '09/4/2015 10:00'
+Get-XtremPerformance -ObjectType Cluster -Properties avg__iops,avg__bw -Granularity one_hour -FromDateTime '09/4/2015 08:00' -ToDateTime '09/4/2015 11:00'
+```
+
 These are the possible properties for the 'Cluster' object:
 ```     
       

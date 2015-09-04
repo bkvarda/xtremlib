@@ -1792,6 +1792,10 @@ Param (
     [parameter()]
     [ValidateSet('one_minute','ten_minutes','one_hour','one_day','auto','raw')]
     [String]$Granularity = 'one_hour',
+    [Parameter()]
+    [DateTime]$ToDateTime = (Get-Date),
+    [Parameter()]
+    [DateTime]$FromDateTime = (Get-Date $ToDateTime.AddDays(-30)),
     [parameter()]
     [string]$Password,
     [Parameter()]
@@ -1799,7 +1803,8 @@ Param (
   )
    
   $Route = '/types/performance'
-  $GetProperty = 'entity='+$ObjectType+'&granularity='+$Granularity
+  $GetProperty = 'entity='+$ObjectType+'&granularity='+$Granularity+'&from-time='+(Get-Date $FromDateTime -format yyyy-MM-dd+H:mm:ss)+'&to-time='+(Get-Date $ToDateTime -format yyyy-MM-dd+H:mm:ss)
+  
   $ObjectSelection = 'counters'
 
   New-XtremRequest -Method GET -Endpoint $Route -XmsName $XmsName -Username $Username -Password $Password -ObjectSelection $ObjectSelection -GetProperty $GetProperty -Properties $Properties
@@ -2039,7 +2044,7 @@ $result = try{
                   }
 
                   ##USE THIS BELOW LINE TO DEBUG WHAT URL IS BEING GENERATED :)
-                  ## Write-Host $Uri 
+                  #Write-Host $Uri 
                   
                  
                   
@@ -2051,10 +2056,9 @@ $result = try{
 
                         $jsonserial= New-Object -TypeName System.Web.Script.Serialization.JavaScriptSerializer 
                         $jsonserial.MaxJsonLength = [int]::MaxValue
-                        $data = $jsonserial.DeserializeObject((Invoke-RestMethod -Method $Method -Uri $Uri -Headers $Header))
+                        $data = $jsonserial.DeserializeObject((Invoke-WebRequest -Method $Method -Uri $Uri -Headers $Header))
                         
                         $data
-                        
 
                       }
                       else{
