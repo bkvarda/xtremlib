@@ -2038,8 +2038,8 @@ $result = try{
 
                   }
 
-
-                   Write-Host $Uri 
+                  ##USE THIS BELOW LINE TO DEBUG WHAT URL IS BEING GENERATED :)
+                  ## Write-Host $Uri 
                   
                  
                   
