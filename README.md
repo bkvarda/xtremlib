@@ -480,6 +480,12 @@ If you wanted to get a report showing the used logical/physical capacity and the
 ```
 Get-XtremPerformance -ObjectType Cluster -Properties avg__ud_ssd_space_in_use_in_base10,avg__logical_space_in_use,avg__dedup_ratio,avg__compression_factor -Granularity one_day -FromDateTime '06/4/2015 08:00' -ToDateTime '09/4/2015 10:00' | Export-XtremCSV -ExportPath C:\temp\capacity.csv
 ```
+A minute later, you can make charts like this:
+![Dedupe/Compression](http://i.imgur.com/NJSPpC4.png)
+
+
+Or like this:
+![Physical/Logical Capacity](http://i.imgur.com/9m6WRNO.png)
 
 ## Full Command List
 In PowerShell, use Get-Help
