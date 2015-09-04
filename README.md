@@ -272,7 +272,7 @@ And more...
 ## How to Retrieve Historical Perf/Capacity Statistics
 This was a new feature in 4.0, and because there are alot of options this is getting its own section. The command to be ran is like this:
 ```
-Get-XtremPerformance -ObjectType <objecttype> -Granularity <granularity> -ObjectNames <[optional]specific object names> -Properties <[optional] specific properties> -FromDateTime <[optional] timeframe> -ToDateTime <[optional] timeframe>
+Get-XtremPerformance -ObjectType -Granularity -ObjectList -Properties -FromDateTime -ToDateTime 
 ```
 These are the possible ObjectTypes:
 ```
@@ -284,8 +284,12 @@ Get-XtremPerformance -ObjectType Cluster -Granularity one_day -FromDateTime '08/
 Get-XtremPerformance -ObjectType Cluster -Granularity one_minute -FromDateTime '09/4/2015 08:00' -ToDateTime '09/4/2015 10:00'
 Get-XtremPerformance -ObjectType Cluster -Properties avg__iops,avg__bw -Granularity one_hour -FromDateTime '09/4/2015 08:00' -ToDateTime '09/4/2015 11:00'
 ```
-
-These are the possible properties for the 'Cluster' object:
+Object-List is optional. It is a comma separated list of instances of the object you selected...For instance, a list of volumes:
+```
+Get-XtremPerformance -ObjectType Volume -Granularity one_day -Properties avg__bw -ObjectList (Get-XtremVolumes).name
+Get-XtremPerformance -ObjectType Volume -Granularity one_day -Properties avg__bw -ObjectList navi,navi1,navi2
+``` 
+Properties are optional (default is ALL). These are the possible properties for the 'Cluster' object:
 ```     
       
         "avg__avg_latency", 
@@ -474,6 +478,7 @@ figure that many people will like to use this, I made module command that will d
 Get-XtremPerformance -ObjectType Cluster -Properties avg__iops,avg__bw | Export-XtremCSV -ExportPath C:\temp\performance.csv
 ```
 That will create a CSV that you can use to create graphs or whatever. I've even taken care of the epoch conversion for you (the timestamps are Unix Epoch time). 
+
 
 ####Capacity Trending Examples
 If you wanted to get a report showing the used logical/physical capacity and the dedupe/compression over a 3 month period, this would work:

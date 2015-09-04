@@ -1796,6 +1796,8 @@ Param (
     [DateTime]$ToDateTime = (Get-Date),
     [Parameter()]
     [DateTime]$FromDateTime = (Get-Date $ToDateTime.AddDays(-30)),
+    [Parameter()]
+    [String[]]$ObjectList = $null,
     [parameter()]
     [string]$Password,
     [Parameter()]
@@ -1803,7 +1805,23 @@ Param (
   )
    
   $Route = '/types/performance'
-  $GetProperty = 'entity='+$ObjectType+'&granularity='+$Granularity+'&from-time='+(Get-Date $FromDateTime -format yyyy-MM-dd+H:mm:ss)+'&to-time='+(Get-Date $ToDateTime -format yyyy-MM-dd+H:mm:ss)
+
+  $ObjectListString = $null
+
+  $Count =  $ObjectList.Count
+
+  if($Objectlist){
+
+    For($i = 0; $i -lt $Count; $i++){
+
+      $ObjectListString += '&obj-list='+$ObjectList[$i]
+
+    }
+
+  }
+  
+
+  $GetProperty = 'entity='+$ObjectType+'&granularity='+$Granularity+'&from-time='+(Get-Date $FromDateTime -format yyyy-MM-dd+H:mm:ss)+'&to-time='+(Get-Date $ToDateTime -format yyyy-MM-dd+H:mm:ss)+$ObjectListString
   
   $ObjectSelection = 'counters'
 
