@@ -228,11 +228,248 @@ Get details about a specific Target or Initiator
 Get-XtremInitiator init1
 Get-XtremTarget X1-SC1-fc1
 ```
+Get all volume mappings:
+```
+Get-XtremVolumeMappings
+```
+Or maybe you want to see a list of all volumes attached to all initiator groups sorted by initiator group?:
+```
+Get-XtremVolumeMappings -Properties vol-name,ig-name | Select vol-name,ig-name | Sort-Object ig-name | Format-Table -AutoSize
 
-And many more!
+vol-name          ig-name   
+--------          -------   
+OracleQA1-Data1   Prod_C3_B1
+VDI2-DS           Prod_C3_B1
+OracleQA1-Data4   Prod_C3_B1
+OracleQA1-Data3   Prod_C3_B1
+OracleQA1-Data2   Prod_C3_B1
+OracleProd1-Data1 Prod_C3_B1
+OracleProd1-Data4 Prod_C3_B1
+OracleProd1-Data3 Prod_C3_B1
+OracleProd1-Data2 Prod_C3_B1
+OracleProd-DS     Prod_C3_B1
+OracleProd1-Data3 Prod_C3_B2
+VDI2-DS           Prod_C3_B2
+```
+Return info about a specific mapping:
+```
+Get-XtremVolumeMaping 4_4_4
+```
+Map a volume or snapshot to an initiator group:
+```
+New-XtremVolumeMapping -VolumeName navi -InitiatorGroupName naviig -Lun 10
+New-XtremVolumeMapping navi naviig 10
+New-XtremVolumeMapping navi naviig
+```
+Delete a mapping:
+```
+Remove-XtremVolumeMapping -VolumeName navi -InitiatorGroupName naviig
+Remove-XtremVolumeMapping navi naviig
+```
+And more...
+
+## How to Retrieve Historical Performance Stats
+This was a new feature in 4.0, and because there are alot of options this is getting its own section. The command to be ran is like this:
+```
+Get-XtremPerformance -ObjectType <objecttype> -Granularity <granularity> -ObjectNames <[optional]specific object names> -Properties <[optional] specific properties> -TimeFrame <[optional] timeframe>
+```
+These are the possible ObjectTypes:
+```
+SnapshotGroup, Initiator, Target, XEnv, DataProtectionGroup, Volume, Cluster, Tag, InitiatorGroup, SSD, TargetGroup, Xms
+```
+These are the possible properties for the 'Cluster' object:
+```     
+      
+        "avg__avg_latency", 
+        "avg__wr_iops_32kb", 
+        "avg__rd_iops_64kb", 
+        "avg__avg_latency_64kb", 
+        "avg__rd_latency_4kb", 
+        "avg__rd_iops_8kb", 
+        "avg__iops_128kb", 
+        "avg__small_wr_iops", 
+        "avg__rd_latency_8kb", 
+        "avg__free_ud_ssd_space_in_base10", 
+        "avg__rd_bw_16kb", 
+        "avg__rd_bw_128kb", 
+        "avg__bw_4kb", 
+        "avg__bw_gt1mb", 
+        "avg__wr_bw_by_block", 
+        "avg__rd_latency_1kb", 
+        "avg__unaligned_rd_iops", 
+        "avg__unaligned_wr_bw", 
+        "avg__unaligned_bw", 
+        "avg__dedup_ratio", 
+        "avg__logical_space_in_use", 
+        "avg__bw_64kb", 
+        "avg__rd_bw_4kb", 
+        "avg__bw_8kb", 
+        "avg__rd_latency_32kb", 
+        "avg__wr_bw_gt1mb", 
+        "avg__iops_64kb", 
+        "avg__rd_latency_16kb", 
+        "avg__wr_bw_1mb", 
+        "avg__iops_512kb", 
+        "avg__rd_bw_by_block", 
+        "avg__rd_latency_gt1mb", 
+        "avg__wr_bw", 
+        "avg__iops_1kb", 
+        "avg__rd_latency_512b", 
+        "avg__wr_bw_2kb", 
+        "avg__avg_latency_2kb", 
+        "avg__iops_256kb", 
+        "avg__bw", 
+        "avg__iops_2kb", 
+        "avg__rd_latency", 
+        "avg__rd_latency_2kb", 
+        "avg__small_iops", 
+        "avg__bw_512b", 
+        "avg__wr_latency_128kb", 
+        "avg__bw_by_block", 
+        "avg__wr_latency_16kb", 
+        "avg__wr_iops_64kb", 
+        "avg__rd_bw_512b", 
+        "avg__wr_latency_512kb", 
+        "avg__wr_iops", 
+        "avg__avg_latency_8kb", 
+        "avg__thin_provisioning_ratio", 
+        "avg__wr_latency_512b", 
+        "avg__wr_iops_512b", 
+        "avg__bw_32kb", 
+        "avg__iops_16kb", 
+        "avg__wr_latency_32kb", 
+        "avg__wr_iops_4kb", 
+        "avg__rd_bw_1kb", 
+        "avg__wr_latency_1mb", 
+        "avg__small_wr_bw", 
+        "avg__rd_bw_256kb", 
+        "avg__wr_iops_by_block", 
+        "avg__wr_latency_gt1mb", 
+        "avg__bw_128kb", 
+        "avg__wr_iops_2kb", 
+        "avg__wr_iops_1kb", 
+        "avg__wr_bw_512b", 
+        "avg__avg_latency_128kb", 
+        "avg__iops_32kb", 
+        "avg__bw_2kb", 
+        "avg__wr_bw_128kb", 
+        "avg__shared_memory", 
+        "avg__avg_latency_4kb", 
+        "avg__iops", 
+        "avg__rd_iops_2kb", 
+        "avg__avg_latency_1kb", 
+        "avg__rd_iops_by_block", 
+        "avg__bw_16kb", 
+        "avg__avg_latency_16kb", 
+        "avg__logical_space_in_use_in_base10", 
+        "avg__rd_iops_32kb", 
+        "avg__avg_latency_512kb", 
+        "avg__rd_bw_512kb", 
+        "avg__rd_iops_16kb", 
+        "avg__small_rd_iops", 
+        "avg__rd_iops_512b", 
+        "avg__free_logical_space_in_base10", 
+        "avg__rd_iops_256kb", 
+        "avg__rd_iops_512kb", 
+        "avg__iops_gt1mb", 
+        "avg__rd_bw_8kb", 
+        "avg__rd_bw_64kb", 
+        "avg__rd_bw", 
+        "avg__bw_1mb", 
+        "avg__num_of_vols", 
+        "avg__bw_256kb", 
+        "avg__ud_ssd_space_in_use_in_base10", 
+        "avg__small_rd_bw", 
+        "avg__wr_bw_4kb", 
+        "avg__unaligned_rd_bw", 
+        "avg__bw_1kb", 
+        "avg__wr_bw_64kb", 
+        "avg__rd_latency_512kb", 
+        "avg__vol_size", 
+        "avg__wr_bw_512kb", 
+        "avg__wr_iops_256kb", 
+        "avg__rd_latency_64kb", 
+        "avg__shared_memory_in_use", 
+        "avg__wr_bw_32kb", 
+        "avg__dedup_space_in_use", 
+        "avg__vol_size_in_base10", 
+        "avg__wr_bw_1kb", 
+        "avg__rd_bw_2kb", 
+        "avg__iops_4kb", 
+        "avg__rd_latency_128kb", 
+        "avg__wr_bw_256kb", 
+        "avg__iops_8kb", 
+        "avg__iops_1mb", 
+        "avg__ud_ssd_space", 
+        "avg__rd_latency_1mb", 
+        "avg__iops_512b", 
+        "avg__ud_ssd_space_in_use", 
+        "avg__bw_512kb", 
+        "avg__compression_factor", 
+        "avg__rd_iops_128kb", 
+        "avg__wr_latency_256kb", 
+        "avg__wr_iops_128kb", 
+        "avg__unaligned_iops", 
+        "avg__wr_latency_8kb", 
+        "avg__wr_iops_8kb", 
+        "avg__unaligned_wr_iops", 
+        "avg__wr_latency_4kb", 
+        "avg__wr_iops_16kb", 
+        "avg__rd_bw_32kb", 
+        "avg__wr_latency", 
+        "avg__wr_iops_gt1mb", 
+        "avg__data_reduction_ratio", 
+        "avg__wr_latency_2kb", 
+        "avg__wr_iops_1mb", 
+        "avg__avg_latency_256kb", 
+        "avg__rd_bw_1mb", 
+        "avg__rd_iops_1mb", 
+        "avg__wr_latency_1kb", 
+        "avg__wr_iops_512kb", 
+        "avg__small_bw", 
+        "avg__wr_latency_64kb", 
+        "avg__rd_iops_1kb", 
+        "avg__space_in_use", 
+        "avg__avg_latency_1mb", 
+        "avg__wr_bw_8kb", 
+        "avg__avg_latency_gt1mb", 
+        "avg__iops_by_block", 
+        "avg__rd_bw_gt1mb", 
+        "avg__rd_latency_256kb", 
+        "avg__avg_latency_512b", 
+        "avg__avg_latency_32kb", 
+        "avg__rd_iops_4kb", 
+        "avg__wr_bw_16kb", 
+        "avg__rd_iops_gt1mb", 
+        "avg__ud_ssd_space_in_base10", 
+        "avg__rd_iops"
+```
+
+As you can see, there are a ton, and they vary from object to object. To see the properties for your desired object, do this and check the properties that come back:
+```
+Get-XtremPerformance -ObjectType <objecttype> -Granularity one_minute
+```
+Then run the command with only a subset of the properties returned in the previous command:
+```
+Get-XtremPerformance -ObjectType Cluster -Properties avg__iops,avg__bw
+```
+The returned object has 4 properties: counters, members, links, and granularity. You probably want to do something with this data, so understanding the layout is pretty key.
+```
+'Members' are your columns, such as 'timestamp', 'guid', 'name', 'index', 'avg__iops', 'avg__bw'. Take note of the double '_'
+
+'Counters' contains many objects, and each one contains values for each of the 'Members' in order (essentially, statistics at a particular time stamp) 
+
+``` 
+You can think of 'Members' as the columns, and 'Counters' as the rows. Powershell's Export-CSV won't just handle this object the way you'd expect without some specialized object formatting. Since I 
+figure that many people will like to use this, I made module command that will do this for you. So putting it all together:
+```
+Get-XtremPerformance -ObjectType Cluster -Properties avg__iops,avg__bw | Export-XtremCSV -ExportPath C:\temp\performance.csv
+```
+That will create a CSV that you can use to create graphs or whatever. I've even taken care of the epoch conversion for you (the timestamps are Unix Epoch time). 
+
 
 ## Full Command List
-In PowerShell, run Get-XtremHelp to list all of the available commands. Get-Help is also available for each command. 
+In PowerShell, use Get-Help
 
 ##Licensing
 Licensed under the Apache License, Version 2.0 (the “License”); you may not use this file except in compliance with the License. You may 

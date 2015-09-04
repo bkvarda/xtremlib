@@ -1080,6 +1080,242 @@ Param(
 
 ######### MAPPING COMMANDS #########
 
+Function Get-XtremVolumeMappings{
+
+  <#
+     .DESCRIPTION
+      Retrieves list of Volumes
+
+      .PARAMETER $xioname
+      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $username
+      Username for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $password
+      Password for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .EXAMPLE
+      Get-XtremVolumes
+
+      .EXAMPLE
+      Get-XtremVolumes -xioname 10.4.45.24 -username admin -password Xtrem10
+
+  #>
+
+  [cmdletbinding()]
+Param(
+    [parameter()]
+    [string]$XmsName,
+    [parameter()]
+    [String]$XtremioName = $global:XtremClusterName,
+    [parameter()]
+    [string]$Username,
+    [parameter()]
+    [string]$Password,
+    [parameter()]
+    [string[]]$Properties
+  )
+    
+    $Route = '/types/lun-maps'
+ 
+    $ObjectSelection = 'lun-maps'
+
+    New-XtremRequest -Method GET -Endpoint $Route -XmsName $XmsName -XtremioName $XtremioName -Properties $Properties -Username $Username -Password $Password -ObjectSelection $ObjectSelection
+
+}
+
+#Returns Statistics for a Specific Volume or Snapshot
+Function Get-XtremVolumeMapping{
+  
+   <#
+     .DESCRIPTION
+      Retrieves information about an XtremIO volume or snapshot
+
+      .PARAMETER $xioname
+      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $username
+      Username for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $password
+      Password for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $volname
+      Name of the volume you would like information for
+
+      .EXAMPLE
+      Get-XtremVolume -volname testvol
+
+      .EXAMPLE
+      Get-XtremVolume -xioname 10.4.45.24 -username admin -password Xtrem10 -volname testvol
+
+  #>
+
+  [cmdletbinding()]
+Param (
+    [parameter()]
+    [string]$XmsName,
+    [parameter()]
+    [string]$XtremioName=$global:XtremClusterName,
+    [parameter()]
+    [string]$Username,
+    [parameter(Mandatory=$true,Position=0)]
+    [string]$MappingName,
+    [parameter()]
+    [string]$Password,
+    [Parameter()]
+    [string[]]$Properties
+  )
+   
+  $Route = '/types/lun-maps'
+  $GetProperty = 'name='+$MappingName
+  $ObjectSelection = 'content'
+
+  New-XtremRequest -Method GET -Endpoint $Route -XmsName $XmsName -Username $Username -Password $Password -ObjectSelection $ObjectSelection -GetProperty $GetProperty -Properties $Properties
+    
+}
+
+#Creates a Volume. If no folder specified, defaults to root. 
+Function New-XtremVolumeMapping{
+
+ <#
+     .DESCRIPTION
+      Creates a new volume. Returns true if successful.
+
+      .PARAMETER $xioname
+      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $username
+      Username for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $password
+      Password for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $volname
+      Name of the volume you would like information for
+
+      .PARAMETER $volsize
+      Size of the volume you want to create with trailing 'm', for MB, 'g' GB, 't' for TB
+
+      .PARAMETER $folder 
+      Optional parameter. Requires full path format IE /folder1/folder2. Defaults to root
+
+      .EXAMPLE
+      New-XtremVolume -volname testvol -volsize 1048m
+
+      .EXAMPLE
+      New-XtremVolume -xioname 10.4.45.24 -username admin -password Xtrem10 -volname testvol -volsize 1048m
+
+  #>
+[CmdletBinding()]
+
+Param(
+[Parameter()]
+[String]$XmsName,
+[Parameter()]
+[String]$XtremioName,
+[Parameter()]
+[String]$Username,
+[Parameter()]
+[String]$Password,
+[Parameter(Mandatory=$true,ValueFromPipelineByPropertyName=$true,Position=0)]
+[Alias('name')]
+[String]$VolumeName,
+[Parameter(Mandatory=$true,Position=1)]
+[String]$InitiatorGroupName,
+[Parameter(Position=2)]
+[String]$Lun
+)
+
+   $Route = '/types/lun-maps'
+
+     if($Lun){
+
+  $Body = @"
+    {
+    "vol-id":"$VolumeName",
+    "ig-id":"$InitiatorGroupName",
+    "lun":"$Lun"
+    }
+"@
+
+  }
+  else{
+    $body = @"
+    {
+    "vol-id":"$VolumeName",
+    "ig-id":"$InitiatorGroupName"
+    }
+"@
+  }
+   $ObjectSelection = 'content'
+
+  New-XtremRequest -Method POST -Endpoint $Route -XmsName $XmsName -XtremioName $XtremioName -Body $Body -Username $Username -Password $Password -ObjectSelection $ObjectSelection
+  
+
+}
+
+
+
+#Deletes a  mapping
+Function Remove-XtremVolumeMapping{
+
+  <#
+     .DESCRIPTION
+      Deletes an existing volume. Returns true if successful. 
+
+      .PARAMETER $xioname
+      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $username
+      Username for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $password
+      Password for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $volname
+      Name of the volume you would like to remove 
+
+      .EXAMPLE
+      Remove-XtremVolume -volname testvol
+
+      .EXAMPLE
+      Remove-XtremVolume -xioname 10.4.45.24 -username admin -password Xtrem10 -volname testvol
+
+  #>
+
+  [cmdletbinding()]
+Param (
+    [parameter()]
+    [string]$XmsName,
+    [parameter()]
+    [string]$XtremioName=$global:XtremClusterName,
+    [parameter()]
+    [string]$Username,
+    [parameter(Mandatory=$true,Position=0)]
+    [string]$VolumeName,
+    [parameter(Mandatory=$true,Position=1)]
+    [string]$InitiatorGroupName,
+    [parameter()]
+    [string]$Password
+  )
+   
+  $Route = '/types/lun-maps'
+
+  $VolumeIndex = (Get-XtremVolume $VolumeName -Username $Username -Password $Password).index
+  $InitiatorGroupIndex = (Get-XtremInitiatorGroup $InitiatorGroupName -Username $Username -Password $Password).index 
+
+  $MappingName = "$VolumeIndex"+"_"+"$InitiatorGroupIndex"+"_1"
+
+  $GetProperty = 'name='+$MappingName
+  
+
+ New-XtremRequest -Method DELETE -Endpoint $Route -XmsName $XmsName -Username $Username -Password $Password -GetProperty $GetProperty
+ 
+ 
+ 
+}
 
 
 ######### INITIATOR COMMANDS #########
@@ -1514,308 +1750,115 @@ Param (
 
 
 
-######### VOLUME MAPPING COMMANDS #########
+######### Performance Collection COMMANDS #########
 
-#Returns list of volume mapping names
-Function Get-XtremVolumeMappings{
-[CmdletBinding()]
+Function Get-XtremPerformance{
+  
+   <#
+     .DESCRIPTION
+      Retrieves information about an XtremIO volume or snapshot
 
+      .PARAMETER $xioname
+      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $username
+      Username for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $password
+      Password for XtremIO XMS. Optional if XtremIO Session was initiated
+
+      .PARAMETER $volname
+      Name of the volume you would like information for
+
+      .EXAMPLE
+      Get-XtremVolume -volname testvol
+
+      .EXAMPLE
+      Get-XtremVolume -xioname 10.4.45.24 -username admin -password Xtrem10 -volname testvol
+
+  #>
+
+  [cmdletbinding()]
+Param (
+    [parameter()]
+    [string]$XmsName,
+    [parameter()]
+    [string]$XtremioName,
+    [parameter()]
+    [string]$Username,
+    [parameter(Mandatory=$true,Position=0)]
+    [ValidateSet('SnapshotGroup', 'Initiator', 'Target', 'XEnv', 'DataProtectionGroup', 'Volume', 'Cluster', 'Tag', 'InitiatorGroup', 'SSD', 'TargetGroup', 'Xms')]
+    [string]$ObjectType,
+    [parameter()]
+    [ValidateSet('one_minute','ten_minutes','one_hour','one_day','auto','raw')]
+    [String]$Granularity = 'one_hour',
+    [parameter()]
+    [string]$Password,
+    [Parameter()]
+    [string[]]$Properties
+  )
+   
+  $Route = '/types/performance'
+  $GetProperty = 'entity='+$ObjectType+'&granularity='+$Granularity
+  $ObjectSelection = 'counters'
+
+  New-XtremRequest -Method GET -Endpoint $Route -XmsName $XmsName -Username $Username -Password $Password -ObjectSelection $ObjectSelection -GetProperty $GetProperty -Properties $Properties
+    
+}
+
+Function Export-XtremCSV{
+[Cmdletbinding()]
 Param(
-[Parameter()]
-[string]$xioname,
-[Parameter()]
-[string]$username,
-[Parameter()]
-[string]$password
+[Parameter(Mandatory=$true,ValueFromPipeline=$true)]
+[PSObject]$PerformanceData,
+[Parameter(Mandatory=$true)]
+[String]$ExportPath
 )
 
-  if($global:XtremUsername){
-  $username = $global:XtremUsername
-  $xioname = $global:XtremName
-  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
-  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
-  }
-   
-    
-  $result=
-  try{  
-    $header = Get-XtremAuthHeader -username $username -password $password 
-    $uri = "https://$xioname/api/json/types/lun-maps"
-   
-    $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method GET).'lun-maps'
-    $list = @()
-    
-    Write-Host "Collecting data for all volumes, this may take some time depending on the number of volumes..."
-
-    ForEach ($mapping in $data){
-     $mapname = $mapping.name
-     
-     $uri = "https://$xioname/api/json/types/lun-maps/?name=$mapname"
-
-     $mapdata = (Invoke-RestMethod -Uri $uri -Headers $header -Method GET).content
-     
-     $mapobject = New-Object System.Object
-     
-     $mapobject | Add-Member -type NoteProperty -name 'Volume Name' -Value $mapdata.'vol-name'
-     $mapobject | Add-Member -type NoteProperty -name 'Host (IG)' -Value $mapdata.'ig-name'
-     $list += $mapobject
-    } 
-    $list
-    
-    
-   }
-   catch{
-   $error = (Get-XtremErrorMsg -errordata  $result) 
-   Write-Error $error
-   
-   }
- $result |Sort-Object 'Host (IG)' | Format-Table -AutoSize
-
-}
-
-#Returns Volumes mapped by Initiator group/hostname
-Function Get-XtremVolumeMapping([string]$xioname,[string]$username,[string]$password,[string]$igname){
-
-  <#
-     .DESCRIPTION
-      Returns volumes mapped to a initiator group
-
-      .PARAMETER $xioname
-      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
-
-      .PARAMETER $username
-      Username for XtremIO XMS. Optional if XtremIO Session was initiated
-
-      .PARAMETER $password
-      Password for XtremIO XMS. Optional if XtremIO Session was initiated
-
-      .PARAMETER $igname
-      Name of initiator group
-
-      .EXAMPLE
-      Get-XtremVolumeMapping -igname testig
-
-      .EXAMPLE
-      Get-XtremVolumeMapping -xioname 10.4.45.24 -username admin -password Xtrem10 -igname testig
-
-  #>
+  $data = $PerformanceData
   
-   if($global:XtremUsername){
-  $username = $global:XtremUsername
-  $xioname = $global:XtremName
-  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
-  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
-  }
-
-   $result=
-  try{  
-    $header = Get-XtremAuthHeader -username $username -password $password 
-    $mapuri = "https://$xioname/api/json/types/lun-maps"
-    $data = (Invoke-RestMethod -Uri $mapuri -Headers $header -Method Get)
-    $maplist = $data.'lun-maps'.name
-    $maparray =@()
-    Write-Host ""
-    Write-Host "Retrieving volume list for host ""$igname"". This request may take a while on arrays with a lot of volumes..."
-    Write-Host ""
-    $maplist | ForEach-Object -Process {
-    $tempdata = (Invoke-RestMethod -Uri "https://$xioname/api/json/types/lun-maps/?name=$_" -Headers $header -Method Get).content
-
-      if($tempdata.'ig-name' -eq $igname){
-        $mapobject = New-Object System.Object
-        $mapobject | Add-Member -type NoteProperty -name 'Map ID' -Value $tempdata.'mapping-index'
-        $mapobject | Add-Member -type NoteProperty -name 'Volume Name' -Value $tempdata.'vol-name'
-        $mapobject | Add-Member -type NoteProperty -name 'Host (IG)' -Value $tempdata.'ig-name'
-        $maparray += $mapobject
-
-       }
-    }
-   return $maparray
-
-    }
-   catch{
-   $error = (Get-XtremErrorMsg -errordata  $result) 
-   Write-Error $error
-   
-   }
-
-}
-
-#Returns Map ID for a given volume and host/ig name combination. Helpful for removing a mapping.
-Function Get-XtremVolumeMapID([string]$xioname,[string]$username,[string]$password,[string]$igname,[string]$volname){
-
-   if($global:XtremUsername){
-  $username = $global:XtremUsername
-  $xioname = $global:XtremName
-  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
-  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
-  }
-
-   $result=
-  try{  
-    $header = Get-XtremAuthHeader -username $username -password $password 
-    $mapuri = "https://$xioname/api/json/types/lun-maps"
-    $data = (Invoke-RestMethod -Uri $mapuri -Headers $header -Method Get)
-    $maplist = $data.'lun-maps'.name
-    $mapid = $null
-    Write-Host ""
-    Write-Host "Retrieving volume mapping for volume ""$volname"" and host ""$igname"". This request may take a while on arrays with a lot of volumes..."
-    Write-Host ""
-    $maplist | ForEach-Object -Process {
-    $tempdata = (Invoke-RestMethod -Uri "https://$xioname/api/json/types/lun-maps/?name=$_" -Headers $header -Method Get).content
-
-      if($tempdata.'ig-name' -eq $igname -and $tempdata.'vol-name' -eq $volname){
-        
-        $mapid = $tempdata.'mapping-index'
-      
-       }
-    }
-   return $mapid
-
-    }
-   catch{
-   $error = (Get-XtremErrorMsg -errordata  $result) 
-   Write-Error $error
-   
-   }
-
-}
-
-#Maps volume to initiator group
-Function New-XtremVolumeMapping([string]$xioname,[string]$username,[string]$password,[string]$volname,[string]$igname,[string]$lunid){
-
-  <#
-     .DESCRIPTION
-      Maps a volume to an initiator group
-
-      .PARAMETER $xioname
-      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
-
-      .PARAMETER $username
-      Username for XtremIO XMS. Optional if XtremIO Session was initiated
-
-      .PARAMETER $password
-      Password for XtremIO XMS. Optional if XtremIO Session was initiated
-
-      .PARAMETER $igname
-      Name of initiator group you want to map volume to
-
-      .PARAMETER $volname
-      Name of volume you would like to map
-
-      .PARAMETER $lunid
-      LUN # you want the volume mapped to have on the host
-
-      .EXAMPLE
-      New-XtremVolumeMapping -volname testvol -igname testig
-
-      .EXAMPLE
-      New-XtremVolumeMapping -xioname 10.4.45.24 -username admin -password Xtrem10 -volname testvol -igname testig
-
-  #>
+  $members = $data.members
+  $counters = $data.counters
   
-  if($global:XtremUsername){
-  $username = $global:XtremUsername
-  $xioname = $global:XtremName
-  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
-  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
-  }
 
+  $dataarray = @()
 
-  $result=try{
-    $header = Get-XtremAuthHeader -username $username -password $password
-  if($lunid){
-  $body = @"
-    {
-    "vol-id":"$volname",
-    "ig-id":"$igname",
-    "lun":"$lunid"
-    }
-"@
+    for($i = 0; $i -lt $counters.count; $i++){
 
-  }
-  else{
-    $body = @"
-    {
-    "vol-id":"$volname",
-    "ig-id":"$igname"
-    }
-"@
-  }
-    $uri = "https://$xioname/api/json/types/lun-maps/"
-    $data = (Invoke-RestMethod -Uri $uri -Headers $header -Method Post -Body $body)
-    Write-Host ""
-    Write-Host -ForegroundColor Green "Volume ""$volname"" successfully mapped to initiator group ""$igname"""
-    
-    return (Invoke-RestMethod -Uri $data.links.href -Headers $header -Method Get).content
-    }
+    $dataobj = New-Object System.Object
+    [datetime]$EpochTime = '1970-01-01 00:00:00'
 
-   catch{
-       $error = (Get-XtremErrorMsg -errordata  $result) 
-        Write-Error $error
+        for($j = 0; $j -lt $members.count; $j++){
+            
+             #This is how I'm dealing with epoch time...
+             if($j -eq 0)
+             {
+               
+               $time = $EpochTime.AddMilliSeconds($counters[$i][$j])
+
+               $dataobj | Add-Member -type NoteProperty -name $members[$j] -Value $time
+
+             }
+             else{
+
+                $dataobj | Add-Member -type NoteProperty -name $members[$j] -Value $counters[$i][$j]
+             }
+             
         
-   }  
+          }
+   
+    $dataarray = $dataarray + $dataobj
+    }
+
+    $sort_order = "timestamp"
+   
+    $dataarray |sort $sort_order | Export-Csv $ExportPath -NoTypeInformation
+
+
 
 }
 
-#Removes volume mapping
-Function Remove-XtremVolumeMapping([string]$xioname,[string]$username,[string]$password,[string]$igname,[string]$volname){
- 
-  <#
-     .DESCRIPTION
-      Unmaps a volume from an initiator group (does not delete the IG or the volume, just unmaps)
 
-      .PARAMETER $xioname
-      IP Address or hostname for XtremIO XMS. Optional if XtremIO Session was initiated
-
-      .PARAMETER $username
-      Username for XtremIO XMS. Optional if XtremIO Session was initiated
-
-      .PARAMETER $password
-      Password for XtremIO XMS. Optional if XtremIO Session was initiated
-
-      .PARAMETER $igname
-      Name of initiator group you want to unmap the volume from
-
-      .PARAMETER $volname
-      Name of volume you would like to unmap
-
-      .EXAMPLE
-      Remove-XtremVolumeMapping -volname testvol -igname testig
-
-      .EXAMPLE
-      Remove-XtremVolumeMapping -xioname 10.4.45.24 -username admin -password Xtrem10 -volname testvol -igname testig
-
-  #>
-
-  if($global:XtremUsername){
-  $username = $global:XtremUsername
-  $xioname = $global:XtremName
-  $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($global:XtremPassword)
-  $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
-  }
-   
-    
-  $result=
-  try{
-    $volid = (Get-XtremVolume -xioname $xioname -volname $volname -username $username -password $password).index
-    $igid = (Get-XtremInitiatorGroup -xioname $xioname -username $username -password $password -igname $igname).index
-    $tgid = "1"
-    $mapname = "$volid"+"_"+"$igid"+"_"+"$tgid"
-    $header = Get-XtremAuthHeader -username $username -password $password 
-    $uri = "https://$xioname/api/json/types/lun-maps/?name=$mapname"
-    $request = (Invoke-RestMethod -Uri $uri -Headers $header -Method DELETE)
-
-    Write-Host ""
-    Write-Host -ForegroundColor Green "Successfully deleted mapping of volume ""$volname"" from host/ig ""$igname"""
-    return $true
-   }
-   catch{
-   $error = (Get-XtremErrorMsg -errordata  $result) 
-   Write-Error $error
-   
-   }
-
-}
 
 
 ######### REQUEST HELPERS #########
@@ -1893,8 +1936,8 @@ Param(
   $Password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
   }
 
-  #Special case...tags doesn't take cluster name
-  if($Endpoint -like '*tags*' -and ($Method -eq 'GET' -or $Method -eq 'DELETE')){
+  #Special case...tags doesn't take cluster name and neither does performance
+  if(($Endpoint -like '*tags*' -or $Endpoint -like '*performance*') -and ($Method -eq 'GET' -or $Method -eq 'DELETE')){
    $XtremioName = $null
   }
 
@@ -1941,13 +1984,20 @@ $result = try{
 
                   
                   if($PropertyString){
+                    
+                    #another special case for performance calls...
 
-                    $PropertyString = 'full=1&'+$PropertyString
+                    if($Endpoint -like "*performance*"){
+                      $PropertyString = $PropertyString
+                    }
+                    else{
+                      $PropertyString = 'full=1&'+$PropertyString
+                    }
 
                   }
 
            
-                  #We now have a property string <if there are properties> and cluster name <if specified>, and a GET property <if specified> we need to build a full URI
+                  #We now have a property string <if there are properties> and cluster name <if specified>, and a GET property <if specified> we need to build a full URI. Yes this is a lazy way to handle this.
                   
                   if($GetProperty -and $ClusterString -and $PropertyString){
                    
@@ -1995,9 +2045,16 @@ $result = try{
                   
                   ##Do this for GET Requests
                   if($Method -eq 'GET'){
-                    
+                      
+                      #special way of handling performance calls
+                      if($Endpoint -like "*performance*"){
+
+                        Invoke-RestMethod -Method $Method -Uri $Uri -Headers $Header
+
+                      }
+                      else{
                     (Invoke-RestMethod -Method $Method -Uri $Uri -Headers $Header).$ObjectSelection
-       
+                    }
                   }
 
                   ##Do this for POST Requests
