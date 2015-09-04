@@ -62,7 +62,7 @@ Function Get-XtremCluster
 Param (
     [parameter()]
     [string]$XmsName,
-    [parameter(Mandatory=$true,Position=0)]
+    [parameter(Position=0)]
     [string]$XtremioName = $global:XtremClusterName,
     [parameter()]
     [string]$Username,
@@ -73,11 +73,11 @@ Param (
 
   )
   
-  $Route = '/types/clusters/'
+  $Route = '/types/clusters'
   $GetProperty = 'name='+$XtremioName
   $ObjectSelection = 'content'
 
-  New-XtremRequest -Method GET -Endpoint $Route -XmsName $XmsName -Username $Username -Password $Password -ObjectSelection $ObjectSelection -GetProperty $GetProperty -Properties $Properties   
+  New-XtremRequest -Method GET -Endpoint $Route -XmsName $XmsName -XtremioName $XtremioName -Username $Username -Password $Password -ObjectSelection $ObjectSelection -GetProperty $GetProperty -Properties $Properties   
 
 }
 

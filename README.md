@@ -52,11 +52,12 @@ New-XtremSession -XmsName 10.29.63.14 -XtremioName xio10 -CredLocation C:\temp
 ```
 4.0 Introduced the ability for a single XMS to manage multiple XtremIO clusters. Even if you only manage one cluster, it's mandatory in this module to include the name. If you aren't sure of the name, run this:
 ```
-Get-XtremClusterNames
+Get-XtremClusters
 ```
 Get All Cluster Statistics
 ```
 Get-XtremCluster
+Get-XtremCluster xio11
 ```
 Or you can return specific properties like this:
 ```
