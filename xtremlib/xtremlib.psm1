@@ -2046,10 +2046,15 @@ $result = try{
                   ##Do this for GET Requests
                   if($Method -eq 'GET'){
                       
-                      #special way of handling performance calls
+                      #special way of handling performance calls, special JSON serializer needs to be used as payload is large
                       if($Endpoint -like "*performance*"){
 
-                        Invoke-RestMethod -Method $Method -Uri $Uri -Headers $Header
+                        $jsonserial= New-Object -TypeName System.Web.Script.Serialization.JavaScriptSerializer 
+                        $jsonserial.MaxJsonLength = [int]::MaxValue
+                        $data = $jsonserial.DeserializeObject((Invoke-RestMethod -Method $Method -Uri $Uri -Headers $Header))
+                        
+                        $data
+                        
 
                       }
                       else{
