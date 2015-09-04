@@ -269,7 +269,7 @@ Remove-XtremVolumeMapping navi naviig
 ```
 And more...
 
-## How to Retrieve Historical Performance Stats
+## How to Retrieve Historical Perf/Capacity Statistics
 This was a new feature in 4.0, and because there are alot of options this is getting its own section. The command to be ran is like this:
 ```
 Get-XtremPerformance -ObjectType <objecttype> -Granularity <granularity> -ObjectNames <[optional]specific object names> -Properties <[optional] specific properties> -FromDateTime <[optional] timeframe> -ToDateTime <[optional] timeframe>
@@ -475,6 +475,11 @@ Get-XtremPerformance -ObjectType Cluster -Properties avg__iops,avg__bw | Export-
 ```
 That will create a CSV that you can use to create graphs or whatever. I've even taken care of the epoch conversion for you (the timestamps are Unix Epoch time). 
 
+####Capacity Trending Examples
+If you wanted to get a report showing the used logical/physical capacity and the dedupe/compression over a 3 month period, this would work:
+```
+Get-XtremPerformance -ObjectType Cluster -Properties avg__ud_ssd_space_in_use_in_base10,avg__logical_space_in_use,avg__dedup_ratio,avg__compression_factor -Granularity one_day -FromDateTime '06/4/2015 08:00' -ToDateTime '09/4/2015 10:00' | Export-XtremCSV -ExportPath C:\temp\capacity.csv
+```
 
 ## Full Command List
 In PowerShell, use Get-Help
