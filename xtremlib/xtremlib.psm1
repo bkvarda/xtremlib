@@ -1877,7 +1877,7 @@ Function Get-XtremAuthHeader([string]$username,[string]$password){
 }
 
 #Returns XtremIO Cluster Name
-Function Get-XtremClusterNames{
+Function Get-XtremClusters{
 [CmdletBinding()]
 Param(
 [Parameter()]
